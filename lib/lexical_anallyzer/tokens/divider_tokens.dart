@@ -7,7 +7,8 @@ enum DividerTokens implements Token {
   endBracket("}"), // 2
   startRoundBracket("("), // 3
   endRoundBracket(")"), // 4
-  newline("\n"), // 5
+  newLine("\n"), // 5
+  newLineWindows("\r\n"),
   comma(","), // 6
   semicolon(";"), // 7
   quotes("\""); // 8
@@ -21,4 +22,7 @@ enum DividerTokens implements Token {
 
   @override
   String encode() => "${Tokens.divider.mark}_$index";
+
+  static bool isNewLine(Token token) =>
+      [newLine, newLineWindows].contains(token);
 }

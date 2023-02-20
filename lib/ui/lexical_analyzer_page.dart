@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../lexical_anallyzer/lexical_analyzer.dart';
+import '../lexical_anallyzer/tokens/divider_tokens.dart';
 
 class LexicalAnalyzerPage extends ConsumerWidget {
   const LexicalAnalyzerPage({
@@ -26,9 +27,13 @@ class _LexicalAnalyzerPageState extends ConsumerState<_LexicalAnalyzerPage> {
   void f() {
     final an = LexicalAnalyzer();
 
-    final tokens = an.execute(an.sampleCode);
+    final tokens = an.execute(inputController.text);
 
-    String output = tokens.map((e) => e.encode()).join(" ");
+    String output = tokens
+        .map(
+          (e) => DividerTokens.isNewLine(e) ? "${e.encode()}\n" : e.encode(),
+        )
+        .join(" ");
 
     outputController.text = output;
   }
