@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'tokens/divider_tokens.dart';
 import 'tokens/identiffier_token.dart';
 import 'tokens/key_words_tokens.dart';
+import 'tokens/operation_tokens.dart';
 import 'tokens/token.dart';
 import 'tokens/value_tokens.dart';
 
@@ -61,6 +62,14 @@ public class Main
   List<IdentifierToken> identifiers = [];
   List<ValueToken> values = [];
 
+  void addToken(Token? token) {
+    if (token != null) {
+      outputTokens.add(token);
+    }
+  }
+
+  void addAllTokens(List<Token?> tokens) => tokens.forEach(addToken);
+
   List<Token> execute(String inputCode) {
     final buffer = StringBuffer();
     var isInString = false;
@@ -69,9 +78,16 @@ public class Main
       var divider = DividerTokens.check(char);
 
       if (divider != null) {
-        if (divider != DividerTokens.whitespace) {
-          outputTokens.add(divider);
+        var str = buffer.toString();
+        if (!handleKeyWords(str, divider)) {
+          if (!handleOperations(str, divider)) {
+            if (!handleValues(str, divider)) {
+              if (!handleIdentifiers(str, divider)) {}
+            }
+          }
         }
+
+        addToken(divider);
 
         buffer.clear();
       } else {
@@ -82,17 +98,48 @@ public class Main
     return outputTokens;
   }
 
-  Token? handleToken(DividerTokens divider, String str) {
-    var keyWord = KeyWordTokens.check(str);
-    if (keyWord != null) {
-      bool isWhile = keyWord == KeyWordTokens.while_ &&
-          [DividerTokens.whitespace, DividerTokens.startRoundBracket]
-              .contains(divider);
+  bool handleKeyWords(String str, DividerTokens divider) {
+    KeyWordTokens? token = KeyWordTokens.check(str);
+    if (token != null) {
+      addToken(token);
+    }
+    return token != null;
+  }
 
-      if (isWhile) {
-        outputTokens.add(keyWord);
+  bool handleOperations(String str, DividerTokens divider) {
+    OperationTokens? token = OperationTokens.check(str);
+    if (token != null) {
+      addToken(token);
+    }
+    return token != null;
+  }
+
+  bool handleIdentifiers(String str, DividerTokens divider) {
+    IdentifierToken? token;
+    if (str.isNotEmpty && int.tryParse(str[0]) == null) {
+      token = IdentifierToken(identifiers.length, str);
+    }
+
+    if (token != null) {
+      addToken(token);
+      identifiers.add(token);
+    }
+    return token != null;
+  }
+
+  bool handleValues(String str, DividerTokens divider) {
+    ValueToken? token;
+    if (num.tryParse(str) != null) {
+      if (int.tryParse(str) != null) {
+        token = ValueToken(values.length, ValueTypeTokens.int, str);
+      } else {
+        token = ValueToken(values.length, ValueTypeTokens.double, str);
       }
     }
-    return null;
+    if (token != null) {
+      addToken(token);
+      values.add(token);
+    }
+    return token != null;
   }
 }

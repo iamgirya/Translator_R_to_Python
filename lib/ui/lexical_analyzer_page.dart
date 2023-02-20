@@ -31,7 +31,11 @@ class _LexicalAnalyzerPageState extends ConsumerState<_LexicalAnalyzerPage> {
 
     String output = tokens
         .map(
-          (e) => DividerTokens.isNewLine(e) ? "${e.encode()}\n" : e.encode(),
+          (e) => e == DividerTokens.whitespace
+              ? ""
+              : DividerTokens.isNewLine(e)
+                  ? "\n"
+                  : e.encode(),
         )
         .join(" ");
 
@@ -56,37 +60,43 @@ class _LexicalAnalyzerPageState extends ConsumerState<_LexicalAnalyzerPage> {
         children: [
           Row(
             children: [
-              Flexible(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Press Java code',
-                      style: Theme.of(context).textTheme.headlineSmall,
-                    ),
-                    const SizedBox(height: 8),
-                    TextField(
-                      controller: inputController,
-                      maxLines: 32,
-                    ),
-                  ],
+              SizedBox(
+                width: 400,
+                child: Flexible(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Press Java code',
+                        style: Theme.of(context).textTheme.headlineSmall,
+                      ),
+                      const SizedBox(height: 8),
+                      TextField(
+                        controller: inputController,
+                        maxLines: 32,
+                      ),
+                    ],
+                  ),
                 ),
               ),
-              const SizedBox(width: 62),
-              Flexible(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Output Tokens',
-                      style: Theme.of(context).textTheme.headlineSmall,
-                    ),
-                    const SizedBox(height: 8),
-                    TextField(
-                      controller: outputController,
-                      maxLines: 32,
-                    ),
-                  ],
+              const SizedBox(width: 16),
+              SizedBox(
+                width: 400,
+                child: Flexible(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Output Tokens',
+                        style: Theme.of(context).textTheme.headlineSmall,
+                      ),
+                      const SizedBox(height: 8),
+                      TextField(
+                        controller: outputController,
+                        maxLines: 32,
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ],
