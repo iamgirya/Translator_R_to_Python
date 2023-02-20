@@ -8,10 +8,13 @@ enum DividerTokens implements Token {
   startRoundBracket("("), // 3
   endRoundBracket(")"), // 4
   newLine("\n"), // 5
-  newLineWindows("\r\n"),
-  comma(","), // 6
-  semicolon(";"), // 7
-  quotes("\""); // 8
+  newLineWindows("\r\n"), //6
+  comma(","), // 7
+  semicolon(";"), // 8
+  quotes("\""), // 9
+  dot("."), // 10
+  startSquareBracket("["), // 11
+  endSquareBracket("]"); // 12
 
   @override
   final String mark;

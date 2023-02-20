@@ -60,7 +60,9 @@ public class Main
   List<Token> outputTokens = [];
 
   List<IdentifierToken> identifiers = [];
-  List<ValueToken> values = [];
+  List<ValueToken> valuesNums = [];
+  List<ValueToken> valuesBool = [];
+  List<ValueToken> valuesString = [];
 
   void addToken(Token? token) {
     if (token != null) {
@@ -74,22 +76,49 @@ public class Main
     final buffer = StringBuffer();
     var isInString = false;
 
-    for (final char in inputCode.characters) {
+    for (int i = 0; i < inputCode.characters.length; i++) {
+      var char = inputCode.characters.elementAt(i);
+
       var divider = DividerTokens.check(char);
 
       if (divider != null) {
         var str = buffer.toString();
-        if (!handleKeyWords(str, divider)) {
-          if (!handleOperations(str, divider)) {
-            if (!handleValues(str, divider)) {
-              if (!handleIdentifiers(str, divider)) {}
+
+        if (divider == DividerTokens.dot) {
+          if (i > 0 && i < inputCode.characters.length - 1) {
+            var prev = int.tryParse(inputCode.characters.elementAt(i - 1));
+            var next = int.tryParse(inputCode.characters.elementAt(i + 1));
+            if (prev != null && next != null) {
+              buffer.write(char);
+              continue;
             }
           }
         }
 
-        addToken(divider);
+        if (divider == DividerTokens.quotes) {
+          if (isInString) {
+            handleString(str, divider);
+            isInString = false;
+            buffer.clear();
+            continue;
+          } else {
+            isInString = true;
+          }
+        }
 
-        buffer.clear();
+        if (isInString) {
+          buffer.write(char);
+        } else {
+          if (!handleKeyWords(str, divider)) {
+            if (!handleOperations(str, divider)) {
+              if (!handleValues(str, divider)) {
+                if (!handleIdentifiers(str, divider)) {}
+              }
+            }
+          }
+          addToken(divider);
+          buffer.clear();
+        }
       } else {
         buffer.write(char);
       }
@@ -131,15 +160,25 @@ public class Main
     ValueToken? token;
     if (num.tryParse(str) != null) {
       if (int.tryParse(str) != null) {
-        token = ValueToken(values.length, ValueTypeTokens.int, str);
+        token = ValueToken(valuesNums.length, ValueTypeTokens.int, str);
       } else {
-        token = ValueToken(values.length, ValueTypeTokens.double, str);
+        token = ValueToken(valuesNums.length, ValueTypeTokens.double, str);
       }
+      valuesNums.add(token);
+    } else if (str == "true" || str == "false") {
+      token = ValueToken(valuesBool.length, ValueTypeTokens.bool, str);
+      valuesBool.add(token);
     }
     if (token != null) {
       addToken(token);
-      values.add(token);
     }
     return token != null;
+  }
+
+  void handleString(String str, DividerTokens divider) {
+    ValueToken token =
+        ValueToken(valuesString.length, ValueTypeTokens.string, str);
+    addToken(token);
+    valuesString.add(token);
   }
 }
