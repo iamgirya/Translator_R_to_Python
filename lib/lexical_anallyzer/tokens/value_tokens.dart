@@ -1,4 +1,4 @@
-import 'package:java_to_csharp_translator/lexical_anallyzer/token.dart';
+import 'package:java_to_csharp_translator/lexical_anallyzer/tokens/token.dart';
 
 enum ValueTypeTokens implements Token {
   int("Ni"),
