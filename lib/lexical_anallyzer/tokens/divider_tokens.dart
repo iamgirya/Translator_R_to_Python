@@ -1,4 +1,5 @@
-import 'package:java_to_csharp_translator/lexical_anallyzer/token.dart';
+import '../../core/extensions.dart';
+import 'token.dart';
 
 enum DividerTokens implements Token {
   whitespace(" "), // 0
@@ -6,7 +7,7 @@ enum DividerTokens implements Token {
   endBracket("}"), // 2
   startRoundBracket("("), // 3
   endRoundBracket(")"), // 4
-  endl("\n"), // 5
+  newline("\n"), // 5
   comma(","), // 6
   semicolon(";"), // 7
   quotes("\""); // 8
@@ -14,4 +15,10 @@ enum DividerTokens implements Token {
   @override
   final String mark;
   const DividerTokens(this.mark);
+
+  static DividerTokens? check(String str) =>
+      DividerTokens.values.where((e) => e.mark == str).firstOrNull;
+
+  @override
+  String encode() => "${Tokens.divider.mark}_$index";
 }

@@ -1,4 +1,5 @@
-import 'package:java_to_csharp_translator/lexical_anallyzer/token.dart';
+import '../../core/extensions.dart';
+import 'token.dart';
 
 enum OperationTokens implements Token {
   plus("+"), // 0
@@ -27,4 +28,10 @@ enum OperationTokens implements Token {
   @override
   final String mark;
   const OperationTokens(this.mark);
+
+  static OperationTokens? check(String str) =>
+      OperationTokens.values.where((e) => e.mark == str).firstOrNull;
+
+  @override
+  String encode() => "${Tokens.operation.mark}_$index";
 }

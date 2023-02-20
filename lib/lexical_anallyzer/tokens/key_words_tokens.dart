@@ -1,4 +1,5 @@
-import 'package:java_to_csharp_translator/lexical_anallyzer/token.dart';
+import '../../core/extensions.dart';
+import 'token.dart';
 
 enum KeyWordTokens implements Token {
   classStatement("class"), // 0
@@ -19,4 +20,10 @@ enum KeyWordTokens implements Token {
   @override
   final String mark;
   const KeyWordTokens(this.mark);
+
+  static KeyWordTokens? check(String str) =>
+      KeyWordTokens.values.where((e) => e.mark == str).firstOrNull;
+
+  @override
+  String encode() => "${Tokens.keyWord.mark}_$index";
 }

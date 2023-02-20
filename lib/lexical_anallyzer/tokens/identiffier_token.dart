@@ -1,11 +1,14 @@
-import 'package:java_to_csharp_translator/lexical_anallyzer/token.dart';
+import 'token.dart';
 
-class IdentifierToken {
+class IdentifierToken implements Token {
   final int id;
 
   final dynamic value;
 
+  @override
+  final String mark = "I";
   IdentifierToken(this.id, this.value);
 
-  String encode() => "${Tokens.identifier.mark}_$id";
+  @override
+  String encode() => "${mark}_$id";
 }
