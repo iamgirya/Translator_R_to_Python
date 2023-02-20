@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../core/logger.dart';
 import 'tokens/divider_tokens.dart';
 import 'tokens/identiffier_token.dart';
 import 'tokens/key_words_tokens.dart';
@@ -18,12 +19,12 @@ class LexicalAnalyzer {
         int chh = 0;
         if (c > 2.79) {
             b = a * e3;
-         
+            f = "as ;ds";
             chh += 1;
         }
         int count = 0;
         while(true) {
-            count++;
+            count ++;
             if (count == 12) {
                 break;
             }
@@ -73,6 +74,7 @@ public class Main
   void addAllTokens(List<Token?> tokens) => tokens.forEach(addToken);
 
   List<Token> execute(String inputCode) {
+    logger.log(Log.info, title: "Start Lexical Analyze", message: inputCode);
     final buffer = StringBuffer();
     var isInString = false;
 
@@ -109,13 +111,22 @@ public class Main
         if (isInString) {
           buffer.write(char);
         } else {
-          if (!handleKeyWords(str, divider)) {
-            if (!handleOperations(str, divider)) {
-              if (!handleValues(str, divider)) {
-                if (!handleIdentifiers(str, divider)) {}
+          if (buffer.isNotEmpty) {
+            if (!handleKeyWords(str, divider)) {
+              if (!handleOperations(str, divider)) {
+                if (!handleValues(str, divider)) {
+                  if (!handleIdentifiers(str, divider)) {
+                    logger.log(
+                      Log.warning,
+                      title: "Failed to process text",
+                      message: str,
+                    );
+                  }
+                }
               }
             }
           }
+
           addToken(divider);
           buffer.clear();
         }
@@ -145,7 +156,9 @@ public class Main
 
   bool handleIdentifiers(String str, DividerTokens divider) {
     IdentifierToken? token;
-    if (str.isNotEmpty && int.tryParse(str[0]) == null) {
+    bool notStartWithNum = int.tryParse(str[0]) == null;
+    bool notContainsSpecialSymbols = !str.trim().contains(RegExp(r"\W"));
+    if (str.isNotEmpty && notStartWithNum && notContainsSpecialSymbols) {
       token = IdentifierToken(identifiers.length, str);
     }
 
