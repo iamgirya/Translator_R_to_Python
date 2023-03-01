@@ -57,12 +57,12 @@ enum KeyWordTokens implements Token {
   args_("args");
 
   @override
-  final String mark;
-  const KeyWordTokens(this.mark);
+  final String lexeme;
+  const KeyWordTokens(this.lexeme);
 
   static KeyWordTokens? check(String str) =>
-      KeyWordTokens.values.where((e) => e.mark == str).firstOrNull;
+      KeyWordTokens.values.where((e) => e.lexeme == str).firstOrNull;
 
   @override
-  String encode() => "${Tokens.keyWord.mark}_$index";
+  String encode() => "${Tokens.keyWord.lexeme}_$index";
 }

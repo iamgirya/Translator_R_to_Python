@@ -6,9 +6,9 @@ class IdentifierToken implements Token {
   final dynamic value;
 
   @override
-  final String mark = "I";
+  final String lexeme = "I";
   IdentifierToken(this.id, this.value);
 
   @override
-  String encode() => "${mark}_$id";
+  String encode() => "${lexeme}_$id";
 }

@@ -17,7 +17,7 @@ class ValueToken implements Token {
   final dynamic value;
 
   @override
-  String get mark => type.mark;
+  String get lexeme => type.mark;
 
   ValueToken(this.id, this.type, this.value);
 

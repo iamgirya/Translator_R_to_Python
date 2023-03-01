@@ -26,12 +26,12 @@ enum OperationTokens implements Token {
   notEqual("!="); // 19
 
   @override
-  final String mark;
-  const OperationTokens(this.mark);
+  final String lexeme;
+  const OperationTokens(this.lexeme);
 
   static OperationTokens? check(String str) =>
-      OperationTokens.values.where((e) => e.mark == str).firstOrNull;
+      OperationTokens.values.where((e) => e.lexeme == str).firstOrNull;
 
   @override
-  String encode() => "${Tokens.operation.mark}_$index";
+  String encode() => "${Tokens.operation.lexeme}_$index";
 }
