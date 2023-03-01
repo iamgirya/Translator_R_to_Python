@@ -1,4 +1,4 @@
-// ignore_for_file: unused_element
+// ignore_for_file: unused_element, unused_field
 
 import 'lexical_analyzer.dart';
 import 'tokens/divider_tokens.dart';
@@ -8,12 +8,12 @@ import 'tokens/operation_tokens.dart';
 typedef State = StateOut Function(String str);
 
 class StateOut {
-  State nextState;
+  State? nextState;
   SemanticProcedures? semanticProcedure;
 
   StateOut(this.nextState, [this.semanticProcedure]);
 
-  factory StateOut.empty() => StateOut((str) => throw UnimplementedError());
+  factory StateOut.error() => StateOut((str) => throw UnimplementedError());
 }
 
 class StateMachine {
@@ -22,6 +22,27 @@ class StateMachine {
   static bool _isDivider(String str) => DividerTokens.check(str) != null;
   static bool _isOperation(String str) => OperationTokens.check(str) != null;
   static bool _isSymbol(String str) => !_isNumber(str) && !_isDivider(str);
+
+  bool _isLastSymbol = false;
+  late State? _currentState = s;
+
+  Stream<StateOut> executeStream(String str, bool isLastLine) async* {
+    _isLastSymbol = isLastLine;
+
+    while (_currentState != null) {
+      var out = _currentState!(str);
+      yield out;
+      _currentState = out.nextState;
+    }
+  }
+
+  StateOut execute(String str, bool isLastSymbol) {
+    _isLastSymbol = isLastSymbol;
+
+    var out = _currentState!(str);
+    _currentState = out.nextState;
+    return out;
+  }
 
   late State s = (str) {
     if (_isSymbol(str)) return StateOut(q1);
@@ -39,7 +60,11 @@ class StateMachine {
       return StateOut(s, SemanticProcedures.p6);
     }
 
-    return StateOut.empty();
+    if (_isLastSymbol) {
+      return StateOut(z);
+    }
+
+    return StateOut.error();
   };
 
   late State q1 = (str) {
@@ -49,7 +74,7 @@ class StateMachine {
       return StateOut(s, SemanticProcedures.p1);
     }
 
-    return StateOut.empty();
+    return StateOut.error();
   };
 
   late State q2 = (str) {
@@ -58,7 +83,7 @@ class StateMachine {
       return StateOut(s, SemanticProcedures.p2);
     }
 
-    return StateOut.empty();
+    return StateOut.error();
   };
 
   late State q3 = (str) {
@@ -78,7 +103,7 @@ class StateMachine {
       return StateOut(s, SemanticProcedures.p3);
     }
 
-    return StateOut.empty();
+    return StateOut.error();
   };
 
   late State q4 = (str) {
@@ -86,7 +111,7 @@ class StateMachine {
       return StateOut(q5);
     }
 
-    return StateOut.empty();
+    return StateOut.error();
   };
 
   late State q5 = (str) {
@@ -102,7 +127,7 @@ class StateMachine {
       return StateOut(s, SemanticProcedures.p3);
     }
 
-    return StateOut.empty();
+    return StateOut.error();
   };
 
   late State q6 = (str) {
@@ -116,7 +141,7 @@ class StateMachine {
       return StateOut(q7);
     }
 
-    return StateOut.empty();
+    return StateOut.error();
   };
 
   late State q7 = (str) {
@@ -124,7 +149,7 @@ class StateMachine {
       return StateOut(q8);
     }
 
-    return StateOut.empty();
+    return StateOut.error();
   };
 
   late State q8 = (str) {
@@ -136,7 +161,7 @@ class StateMachine {
       return StateOut(s, SemanticProcedures.p3);
     }
 
-    return StateOut.empty();
+    return StateOut.error();
   };
 
   late State q9 = (str) {
@@ -144,7 +169,7 @@ class StateMachine {
     if (div != DividerTokens.quotes) return StateOut(q9);
     if (div == DividerTokens.quotes) return StateOut(s, SemanticProcedures.p4);
 
-    return StateOut.empty();
+    return StateOut.error();
   };
 
   late State q10 = (str) {
@@ -153,13 +178,16 @@ class StateMachine {
       return StateOut(q11);
     }
 
-    return StateOut.empty();
+    return StateOut.error();
   };
 
   late State q11 = (str) {
     final div = DividerTokens.check(str);
     if (div == DividerTokens.star) {
       return StateOut(q12);
+    }
+    if (_isLastSymbol) {
+      return StateOut(z);
     }
     if (!DividerTokens.isNewLine(div)) {
       return StateOut(q11);
@@ -178,6 +206,6 @@ class StateMachine {
   };
 
   late State z = (str) {
-    return StateOut.empty();
+    return StateOut(null);
   };
 }
