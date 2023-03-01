@@ -9,6 +9,7 @@ enum DividerTokens implements Token {
   comma(","),
   colon(":"),
   semicolon(";"),
+  slash("/"),
   quotes("\""),
   dot("."),
   startBracket("{"),
@@ -28,6 +29,6 @@ enum DividerTokens implements Token {
   @override
   String encode() => "${Tokens.divider.lexeme}_$index";
 
-  static bool isNewLine(Token token) =>
+  static bool isNewLine(Token? token) =>
       [newLine, newLineWindows].contains(token);
 }
