@@ -8,58 +8,17 @@ import 'tokens/operation_tokens.dart';
 import 'tokens/token.dart';
 import 'tokens/value_tokens.dart';
 
-class LexicalAnalyzer {
-  String sampleCode = """
-
-		    double c = 3;
-        int b;
-        String f;
-        int a = 1;
-        int e3 = 2;
-        int chh = 0;
-        if (c > 2.79) {
-            b = a * e3;
-            f = "as ;ds";
-            chh += 1;
-        }
-        int count = 0;
-        while(true) {
-            count ++;
-            if (count == 12) {
-                break;
-            }
-        }
-
-""";
-
-  String sampleCode2 = """
-public class Main
-{
-	public static void main(String[] args) {
-		    double c = 3;
-        int b;
-        String f;
-        int a = 1;
-        int e3 = 2;
-        int chh = 0;
-        if (c > 2.79) {
-            b = a * e3;
-            f = "as ;ds";
-            chh += 1;
-        }
-        int count = 0;
-        while(true) {
-            count++;
-            if (count == 12) {
-                break;
-            }
-        }
-	}
+enum SemanticProcedures {
+  p1,
+  p2,
+  p3,
+  p4,
+  p5,
+  p6,
 }
-""";
 
+class LexicalAnalyzer {
   List<Token> outputTokens = [];
-
   List<IdentifierToken> identifiers = [];
   List<ValueToken> valuesNums = [];
   List<ValueToken> valuesBool = [];
