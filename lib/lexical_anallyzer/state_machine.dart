@@ -1,5 +1,6 @@
 // ignore_for_file: unused_element, unused_field
 
+import '../core/logger.dart';
 import 'lexical_analyzer.dart';
 import 'tokens/divider_tokens.dart';
 import 'tokens/key_words_tokens.dart';
@@ -13,7 +14,17 @@ class StateOut {
 
   StateOut(this.nextState, [this.semanticProcedure]);
 
-  factory StateOut.error() => StateOut((str) => throw UnimplementedError());
+  factory StateOut.error() => StateOut(
+        (str) {
+          logger.log(
+            Log.error,
+            title: "Error in StateMachine",
+            message: "On this character: \"$str\"",
+          );
+
+          return StateOut(null);
+        },
+      );
 }
 
 class StateMachine {

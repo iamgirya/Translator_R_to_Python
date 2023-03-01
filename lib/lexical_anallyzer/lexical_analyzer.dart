@@ -34,8 +34,8 @@ class LexicalAnalyzer {
 
   List<Token> execute(String inputCode) {
     logger.log(Log.info, title: "Start Lexical Analyze", message: inputCode);
+
     final buffer = StringBuffer();
-    var isInString = false;
 
     for (int i = 0; i < inputCode.characters.length; i++) {
       var char = inputCode.characters.elementAt(i);
@@ -43,52 +43,6 @@ class LexicalAnalyzer {
       var divider = DividerTokens.check(char);
 
       if (divider != null) {
-        var str = buffer.toString();
-
-        if (divider == DividerTokens.dot) {
-          if (i > 0 && i < inputCode.characters.length - 1) {
-            var prev = int.tryParse(inputCode.characters.elementAt(i - 1));
-            var next = int.tryParse(inputCode.characters.elementAt(i + 1));
-            if (prev != null && next != null) {
-              buffer.write(char);
-              continue;
-            }
-          }
-        }
-
-        if (divider == DividerTokens.quotes) {
-          if (isInString) {
-            handleString(str, divider);
-            isInString = false;
-            buffer.clear();
-            continue;
-          } else {
-            isInString = true;
-          }
-        }
-
-        if (isInString) {
-          buffer.write(char);
-        } else {
-          if (buffer.isNotEmpty) {
-            if (!handleKeyWords(str, divider)) {
-              if (!handleOperations(str, divider)) {
-                if (!handleValues(str, divider)) {
-                  if (!handleIdentifiers(str, divider)) {
-                    logger.log(
-                      Log.warning,
-                      title: "Failed to process text",
-                      message: str,
-                    );
-                  }
-                }
-              }
-            }
-          }
-
-          addToken(divider);
-          buffer.clear();
-        }
       } else {
         buffer.write(char);
       }
@@ -97,12 +51,15 @@ class LexicalAnalyzer {
     return outputTokens;
   }
 
-  bool handleKeyWords(String str, DividerTokens divider) {
-    KeyWordTokens? token = KeyWordTokens.check(str);
+  void handleKeyWordsAndOperations(String str) {
+    Token? token = KeyWordTokens.check(str);
+    token ??= OperationTokens.check(str);
+
     if (token != null) {
       addToken(token);
+    } else {
+      handleIdentifiers(str);
     }
-    return token != null;
   }
 
   bool handleOperations(String str, DividerTokens divider) {
@@ -113,23 +70,20 @@ class LexicalAnalyzer {
     return token != null;
   }
 
-  bool handleIdentifiers(String str, DividerTokens divider) {
+  void handleIdentifiers(String str) {
     IdentifierToken? token;
-    bool notStartWithNum = int.tryParse(str[0]) == null;
-    bool notContainsSpecialSymbols = !str.trim().contains(RegExp(r"\W"));
-    if (str.isNotEmpty && notStartWithNum && notContainsSpecialSymbols) {
-      token = IdentifierToken(identifiers.length, str);
+    for (final identifier in identifiers) {
+      if (identifier.value == str) token = identifier;
     }
 
-    if (token != null) {
-      addToken(token);
-      identifiers.add(token);
-    }
-    return token != null;
+    token ??= IdentifierToken(identifiers.length, str);
+    identifiers.add(token);
+    addToken(token);
   }
 
-  bool handleValues(String str, DividerTokens divider) {
+  void handleNumbers(String str) {
     ValueToken? token;
+
     if (num.tryParse(str) != null) {
       if (int.tryParse(str) != null) {
         token = ValueToken(valuesNums.length, ValueTypeTokens.int, str);
@@ -137,20 +91,15 @@ class LexicalAnalyzer {
         token = ValueToken(valuesNums.length, ValueTypeTokens.double, str);
       }
       valuesNums.add(token);
-    } else if (str == "true" || str == "false") {
-      token = ValueToken(valuesBool.length, ValueTypeTokens.bool, str);
-      valuesBool.add(token);
-    }
-    if (token != null) {
       addToken(token);
+    } else {
+      throw Exception("handleNumbers error");
     }
-    return token != null;
   }
 
   void handleString(String str, DividerTokens divider) {
-    ValueToken token =
-        ValueToken(valuesString.length, ValueTypeTokens.string, str);
-    addToken(token);
+    final token = ValueToken(valuesString.length, ValueTypeTokens.string, str);
     valuesString.add(token);
+    addToken(token);
   }
 }
