@@ -1,6 +1,5 @@
-import 'package:flutter/material.dart';
-
 import '../core/logger.dart';
+import 'state_machine.dart';
 import 'tokens/divider_tokens.dart';
 import 'tokens/identiffier_token.dart';
 import 'tokens/key_words_tokens.dart';
@@ -18,6 +17,8 @@ enum SemanticProcedures {
 }
 
 class LexicalAnalyzer {
+  StateMachine stateMachine = StateMachine();
+
   List<Token> outputTokens = [];
   List<IdentifierToken> identifiers = [];
   List<ValueToken> valuesNums = [];
@@ -37,15 +38,49 @@ class LexicalAnalyzer {
 
     final buffer = StringBuffer();
 
-    for (int i = 0; i < inputCode.characters.length; i++) {
-      var char = inputCode.characters.elementAt(i);
+    for (int i = 0; i < inputCode.length; i++) {
+      var char = inputCode[i];
 
-      var divider = DividerTokens.check(char);
+      final stateOut = stateMachine.execute(char, i == inputCode.length - 1);
 
-      if (divider != null) {
-      } else {
-        buffer.write(char);
+      final str = buffer.toString();
+
+      switch (stateOut.semanticProcedure) {
+        case SemanticProcedures.p1:
+          handleKeyWordsAndOperations(str);
+          break;
+        case SemanticProcedures.p2:
+          handleIdentifiers(str);
+          break;
+        case SemanticProcedures.p3:
+          handleNumbers(str);
+          break;
+        case SemanticProcedures.p4:
+          handleString(str);
+          break;
+        case SemanticProcedures.p5:
+          handleOperations(str);
+          break;
+        case SemanticProcedures.p6:
+          handleDividers(str);
+          break;
+        default:
+          break;
       }
+
+      final div = DividerTokens.check(char);
+
+      if ([
+        DividerTokens.whitespace,
+        DividerTokens.newLine,
+        DividerTokens.newLineWindows,
+      ].contains(div)) {
+        addToken(div);
+      }
+
+      buffer.write(char);
+
+      if (stateOut.semanticProcedure != null) buffer.clear();
     }
 
     return outputTokens;
@@ -63,14 +98,19 @@ class LexicalAnalyzer {
   }
 
   void handleIdentifiers(String str) {
+    if (DividerTokens.check(str) != null || str.isEmpty) return;
     IdentifierToken? token;
 
     for (final identifier in identifiers) {
       if (identifier.value == str) token = identifier;
     }
 
-    token ??= IdentifierToken(identifiers.length, str);
-    identifiers.add(token);
+    if (token == null) {
+      var count = str.length;
+      token = IdentifierToken(identifiers.length, str);
+      identifiers.add(token);
+    }
+
     addToken(token);
   }
 
@@ -90,7 +130,7 @@ class LexicalAnalyzer {
     }
   }
 
-  void handleString(String str, DividerTokens divider) {
+  void handleString(String str) {
     final token = ValueToken(valuesString.length, ValueTypeTokens.string, str);
     valuesString.add(token);
     addToken(token);

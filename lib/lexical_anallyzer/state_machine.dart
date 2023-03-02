@@ -36,6 +36,7 @@ class StateMachine {
 
   bool _isLastSymbol = false;
   late State? _currentState = s;
+  late StringBuffer? _buffer;
 
   Stream<StateOut> executeStream(String str, bool isLastLine) async* {
     _isLastSymbol = isLastLine;
@@ -47,11 +48,12 @@ class StateMachine {
     }
   }
 
-  StateOut execute(String str, bool isLastSymbol) {
+  StateOut execute(String symbol, bool isLastSymbol) {
     _isLastSymbol = isLastSymbol;
 
-    var out = _currentState!(str);
+    var out = _currentState!(symbol);
     _currentState = out.nextState;
+
     return out;
   }
 

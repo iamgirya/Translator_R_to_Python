@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../lexical_anallyzer/old_lexical_analyzer.dart';
+import '../lexical_anallyzer/lexical_analyzer.dart';
 import '../lexical_anallyzer/tokens/divider_tokens.dart';
 
 class LexicalAnalyzerPage extends ConsumerWidget {

@@ -10,7 +10,6 @@ import 'tokens/value_tokens.dart';
 
 class LexicalAnalyzer {
   String sampleCode = """
-
 		    double c = 3;
         int b;
         String f;
@@ -29,7 +28,6 @@ class LexicalAnalyzer {
                 break;
             }
         }
-
 """;
 
   String sampleCode2 = """
