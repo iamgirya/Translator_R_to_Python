@@ -62,16 +62,9 @@ class LexicalAnalyzer {
     }
   }
 
-  bool handleOperations(String str, DividerTokens divider) {
-    OperationTokens? token = OperationTokens.check(str);
-    if (token != null) {
-      addToken(token);
-    }
-    return token != null;
-  }
-
   void handleIdentifiers(String str) {
     IdentifierToken? token;
+
     for (final identifier in identifiers) {
       if (identifier.value == str) token = identifier;
     }
@@ -100,6 +93,16 @@ class LexicalAnalyzer {
   void handleString(String str, DividerTokens divider) {
     final token = ValueToken(valuesString.length, ValueTypeTokens.string, str);
     valuesString.add(token);
+    addToken(token);
+  }
+
+  void handleOperations(String str) {
+    final token = OperationTokens.check(str);
+    addToken(token);
+  }
+
+  void handleDividers(String str) {
+    final token = DividerTokens.check(str);
     addToken(token);
   }
 }
