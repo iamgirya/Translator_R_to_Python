@@ -21,7 +21,7 @@ class S extends State {
 
     if (State._isLastSymbol) return (Z(), null);
 
-    return (ErrorState(), null);
+    return (F(), null);
   }
 }
 
@@ -34,7 +34,7 @@ class Q1 extends State {
       return (S(), SemanticProcedure.p1);
     }
 
-    return (ErrorState(), null);
+    return (F(), null);
   }
 }
 
@@ -46,7 +46,7 @@ class Q2 extends State {
       return (S(), SemanticProcedure.p2);
     }
 
-    return (ErrorState(), null);
+    return (F(), null);
   }
 }
 
@@ -62,7 +62,7 @@ class Q3 extends State {
     if (_isDivider(str) || _isOperation(str)) {
       return (S(), SemanticProcedure.p3);
     }
-    return (ErrorState(), null);
+    return (F(), null);
   }
 }
 
@@ -71,7 +71,7 @@ class Q4 extends State {
   call(str) {
     if (_isNumber(str)) return (Q5(), null);
 
-    return (ErrorState(), null);
+    return (F(), null);
   }
 }
 
@@ -83,7 +83,7 @@ class Q5 extends State {
     if (_isDivider(str) || _isOperation(str)) {
       return (S(), SemanticProcedure.p3);
     }
-    return (ErrorState(), null);
+    return (F(), null);
   }
 }
 
@@ -95,7 +95,7 @@ class Q6 extends State {
     if ([OperationTokens.plus, OperationTokens.minus].contains(op)) {
       return (Q7(), null);
     }
-    return (ErrorState(), null);
+    return (F(), null);
   }
 }
 
@@ -109,7 +109,7 @@ class Q7 extends State {
     if ([OperationTokens.plus, OperationTokens.minus].contains(op)) {
       return (Q7(), null);
     }
-    return (ErrorState(), null);
+    return (F(), null);
   }
 }
 
@@ -124,7 +124,7 @@ class Q8 extends State {
       return (S(), SemanticProcedure.p3);
     }
 
-    return (ErrorState(), null);
+    return (F(), null);
   }
 }
 
@@ -134,7 +134,7 @@ class Q9 extends State {
     final div = DividerTokens.check(str);
     if (div != DividerTokens.quotes) return (Q9(), null);
     if (div == DividerTokens.quotes) return (S(), SemanticProcedure.p4);
-    return (ErrorState(), null);
+    return (F(), null);
   }
 }
 
@@ -145,7 +145,7 @@ class Q10 extends State {
     if ([DividerTokens.slash, DividerTokens.star].contains(div)) {
       return (Q11(), null);
     }
-    return (ErrorState(), null);
+    return (F(), null);
   }
 }
 
@@ -162,7 +162,7 @@ class Q11 extends State {
     if (!DividerTokens.isNewLine(div)) {
       return (Q11(), null);
     }
-    return (ErrorState(), null);
+    return (F(), null);
   }
 }
 
@@ -180,7 +180,7 @@ class Z extends State {
   call(str) => (null, null);
 }
 
-class ErrorState extends State {
+class F extends State {
   @override
   call(str) {
     logger.log(Log.error, message: 'Error State');
