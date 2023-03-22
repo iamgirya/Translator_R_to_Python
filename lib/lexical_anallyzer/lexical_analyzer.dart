@@ -153,8 +153,16 @@ class LexicalAnalyzer {
   }
 
   void handleIdentifiers(String str) {
-    if (DividerTokens.check(str) != null || str.isEmpty) return;
+    // if (DividerTokens.check(str) != null || str.isEmpty) return;
     IdentifierToken? token;
+
+    bool? b = bool.tryParse(str);
+    if (b != null) {
+      var token = ValueToken(valuesBool.length, ValueTypeTokens.bool, str);
+      valuesBool.add(token);
+      addToken(token);
+      return;
+    }
 
     for (final identifier in identifiers) {
       if (identifier.value == str) token = identifier;
