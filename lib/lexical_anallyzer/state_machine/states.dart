@@ -28,9 +28,6 @@ class S extends State {
 class Q1 extends State {
   @override
   call(str) {
-    if (_isOperation(str)) {
-      return (S(), SemanticProcedure.p2);
-    }
     if (_isSymbol(str)) return (Q1(), null);
     if (_isNumber(str)) return (Q2(), null);
     if (_isDivider(str) || _isOperation(str)) {

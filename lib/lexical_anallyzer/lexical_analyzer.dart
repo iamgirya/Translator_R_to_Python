@@ -40,8 +40,6 @@ while(true) {
 """;
 
 class LexicalAnalyzer {
-  StateMachine stateMachine = StateMachine();
-
   List<Token> outputTokens = [];
   List<IdentifierToken> identifiers = [];
   List<ValueToken> valuesNums = [];
@@ -54,24 +52,36 @@ class LexicalAnalyzer {
     }
   }
 
+  int currentIndex = 0;
+  String inputCode = '';
+
   void addAllTokens(List<Token?> tokens) => tokens.forEach(addToken);
 
   LexicalAnalyzerOutput execute(String inputCode) {
     logger.log(Log.info, title: "Start Lexical Analyze", message: inputCode);
 
+    this.inputCode = inputCode;
+
+    StateMachine stateMachine = StateMachine(inputCode);
+
     final buffer = StringBuffer();
 
-    for (int i = 0; i < inputCode.length; i++) {
-      var char = inputCode[i];
+    for (currentIndex = 0; currentIndex < inputCode.length; currentIndex++) {
+      var char = inputCode[currentIndex];
 
-      final (nextState, procedure) =
-          stateMachine.execute(char, i == inputCode.length - 1);
+      final (nextState, procedure) = stateMachine.execute(
+        currentIndex,
+        currentIndex == inputCode.length - 1,
+      );
 
       final str = buffer.toString();
+
+      final div = DividerTokens.check(char);
 
       switch (procedure) {
         case SemanticProcedure.p1:
           handleKeyWordsAndOperations(str);
+          if (div == null) currentIndex--;
           handleDividers(char);
           break;
         case SemanticProcedure.p2:
@@ -87,7 +97,7 @@ class LexicalAnalyzer {
           handleDividers(char);
           break;
         case SemanticProcedure.p5:
-          handleOperations(str);
+          handleOperations(char);
           handleDividers(char);
           break;
         case SemanticProcedure.p6:
@@ -101,8 +111,6 @@ class LexicalAnalyzer {
       if (nextState is S) buffer.clear();
 
       if (nextState is! S) buffer.write(char);
-
-      final div = DividerTokens.check(char);
 
       // addToken(div);
 
@@ -132,12 +140,15 @@ class LexicalAnalyzer {
   void handleKeyWordsAndOperations(String str) {
     // str = str.trim();
     Token? token = KeyWordTokens.check(str);
-    token ??= OperationTokens.check(str);
-
     if (token != null) {
       addToken(token);
     } else {
-      handleIdentifiers(str);
+      token = OperationTokens.check(str);
+      if (token != null) {
+        handleOperations(str);
+      } else {
+        handleIdentifiers(str);
+      }
     }
   }
 
@@ -182,7 +193,11 @@ class LexicalAnalyzer {
   }
 
   void handleOperations(String str) {
-    final token = OperationTokens.check(str);
+    var token = OperationTokens.check(str + inputCode[currentIndex + 1]);
+    if (token != null) {
+      currentIndex++;
+    }
+    token ??= OperationTokens.check(str);
     addToken(token);
   }
 

@@ -8,7 +8,11 @@ part 'state.dart';
 part 'states.dart';
 
 final class StateMachine {
+  final String inputCode;
+
   State? _currentState = S();
+
+  StateMachine(this.inputCode);
 
   Stream<(State?, SemanticProcedure?)> executeStream(
     String str,
@@ -22,9 +26,10 @@ final class StateMachine {
     }
   }
 
-  (State?, SemanticProcedure?) execute(String symbol, bool isLastSymbol) {
+  (State?, SemanticProcedure?) execute(int symbolIndex, bool isLastSymbol) {
     State._isLastSymbol = isLastSymbol;
-    var out = _currentState!(symbol);
+    State._inputCode = inputCode;
+    var out = _currentState!(inputCode[symbolIndex]);
     _currentState = out.$1;
     return out;
   }
