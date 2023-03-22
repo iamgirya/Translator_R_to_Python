@@ -11,9 +11,11 @@ enum ValueTypeTokens {
   const ValueTypeTokens(this.mark);
 }
 
-class ValueToken implements Token {
+class ValueToken implements Token, ValToken {
   final int id;
+
   final ValueTypeTokens type;
+  @override
   final dynamic value;
 
   @override

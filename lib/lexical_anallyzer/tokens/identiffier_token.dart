@@ -1,8 +1,9 @@
 import 'token.dart';
 
-class IdentifierToken implements Token {
+class IdentifierToken implements Token, ValToken {
   final int id;
 
+  @override
   final dynamic value;
 
   @override

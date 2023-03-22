@@ -6,6 +6,10 @@ abstract class Token {
   String encode();
 }
 
+abstract class ValToken implements Token {
+  dynamic get value;
+}
+
 enum Tokens implements Token {
   keyWord("W"),
   identifier("I"),

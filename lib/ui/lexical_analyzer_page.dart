@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../lexical_anallyzer/lexical_analyzer.dart';
+import '../lexical_anallyzer/models/lexical_analyzer_output.dart';
 import '../lexical_anallyzer/tokens/divider_tokens.dart';
+import '../lexical_anallyzer/tokens/token.dart';
 
 class LexicalAnalyzerPage extends ConsumerWidget {
   const LexicalAnalyzerPage({
@@ -24,12 +26,13 @@ class _LexicalAnalyzerPage extends ConsumerStatefulWidget {
 }
 
 class _LexicalAnalyzerPageState extends ConsumerState<_LexicalAnalyzerPage> {
+  LexicalAnalyzerOutput? anOutput;
   void f() {
     final an = LexicalAnalyzer();
 
-    final tokens = an.execute(inputController.text);
+    anOutput = an.execute(inputController.text);
 
-    String output = tokens
+    String output = anOutput!.tokens
         .map(
           (e) => e == DividerTokens.whitespace
               ? ""
@@ -96,7 +99,71 @@ class _LexicalAnalyzerPageState extends ConsumerState<_LexicalAnalyzerPage> {
               ),
             ],
           ),
+          Row(
+            children: [
+              TokensTextField(
+                tokens: anOutput?.keyWords ?? [],
+              ),
+              TokensTextField(
+                tokens: anOutput?.identifiers ?? [],
+              ),
+              TokensTextField(
+                tokens: anOutput?.numberValues ?? [],
+              ),
+              TokensTextField(
+                tokens: anOutput?.stringValues ?? [],
+              ),
+              TokensTextField(
+                tokens: anOutput?.boolValues ?? [],
+              ),
+              TokensTextField(
+                tokens: anOutput?.operations ?? [],
+              ),
+              TokensTextField(
+                tokens: anOutput?.dividers ?? [],
+              ),
+            ],
+          )
         ],
+      ),
+    );
+  }
+}
+
+class TokensTextField extends ConsumerWidget {
+  final List<Token> tokens;
+
+  const TokensTextField({required this.tokens, super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    var map =
+        tokens.map((e) => "\"${e.encode()}\": \"${e.lexeme}\" ").join(",\n");
+    if (tokens.isNotEmpty && tokens.first is ValToken) {
+      final valTokens = tokens.whereType<ValToken>();
+      map = valTokens
+          .map((e) => "\"${e.encode()}\": \"${e.value}\" ")
+          .join(",\n");
+    }
+    return SizedBox(
+      width: 200,
+      child: Flexible(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              tokens.isNotEmpty
+                  ? tokens.first.runtimeType.toString()
+                  : 'Tokens',
+              style: Theme.of(context).textTheme.headlineSmall,
+            ),
+            const SizedBox(height: 8),
+            TextField(
+              controller: TextEditingController(text: map),
+              maxLines: 32,
+            ),
+          ],
+        ),
       ),
     );
   }

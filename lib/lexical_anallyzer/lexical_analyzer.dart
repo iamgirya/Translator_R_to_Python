@@ -1,3 +1,4 @@
+import 'models/lexical_analyzer_output.dart';
 import 'state_machine/state_machine.dart';
 
 import '../core/logger.dart';
@@ -55,7 +56,7 @@ class LexicalAnalyzer {
 
   void addAllTokens(List<Token?> tokens) => tokens.forEach(addToken);
 
-  List<Token> execute(String inputCode) {
+  LexicalAnalyzerOutput execute(String inputCode) {
     logger.log(Log.info, title: "Start Lexical Analyze", message: inputCode);
 
     final buffer = StringBuffer();
@@ -106,7 +107,18 @@ class LexicalAnalyzer {
       // }
     }
 
-    return outputTokens;
+    final output = LexicalAnalyzerOutput(
+      tokens: outputTokens,
+      keyWords: outputTokens.toSet().whereType<KeyWordTokens>().toList(),
+      identifiers: identifiers,
+      numberValues: valuesNums,
+      stringValues: valuesString,
+      boolValues: valuesBool,
+      operations: outputTokens.toSet().whereType<OperationTokens>().toList(),
+      dividers: outputTokens.toSet().whereType<DividerTokens>().toList(),
+    );
+
+    return output;
   }
 
   void handleKeyWordsAndOperations(String str) {
