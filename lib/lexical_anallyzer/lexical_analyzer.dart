@@ -1,5 +1,6 @@
+import 'state_machine/state_machine.dart';
+
 import '../core/logger.dart';
-import 'state_machine.dart';
 import 'tokens/divider_tokens.dart';
 import 'tokens/identiffier_token.dart';
 import 'tokens/key_words_tokens.dart';
@@ -7,7 +8,7 @@ import 'tokens/operation_tokens.dart';
 import 'tokens/token.dart';
 import 'tokens/value_tokens.dart';
 
-enum SemanticProcedures {
+enum SemanticProcedure {
   p1,
   p2,
   p3,
@@ -15,6 +16,27 @@ enum SemanticProcedures {
   p5,
   p6,
 }
+
+String kSample1JaveCode = """
+int c = 3;
+        int b;
+        String f;
+        int a = 1;
+        int e3 = 2;
+        int chh = 0;
+        if (c > 2.79) {
+            b = a * e3;
+            f = "as ;ds";
+            chh += 1;
+        }
+        int count = 0;
+        while(true) {
+            count ++;
+            if (count == 12) {
+                break;
+            }
+        }
+""";
 
 class LexicalAnalyzer {
   StateMachine stateMachine = StateMachine();
@@ -41,46 +63,47 @@ class LexicalAnalyzer {
     for (int i = 0; i < inputCode.length; i++) {
       var char = inputCode[i];
 
-      final stateOut = stateMachine.execute(char, i == inputCode.length - 1);
+      final (_, procedure) =
+          stateMachine.execute(char, i == inputCode.length - 1);
 
       final str = buffer.toString();
 
-      switch (stateOut.semanticProcedure) {
-        case SemanticProcedures.p1:
+      switch (procedure) {
+        case SemanticProcedure.p1:
           handleKeyWordsAndOperations(str);
           break;
-        case SemanticProcedures.p2:
+        case SemanticProcedure.p2:
           handleIdentifiers(str);
           break;
-        case SemanticProcedures.p3:
+        case SemanticProcedure.p3:
           handleNumbers(str);
           break;
-        case SemanticProcedures.p4:
+        case SemanticProcedure.p4:
           handleString(str);
           break;
-        case SemanticProcedures.p5:
+        case SemanticProcedure.p5:
           handleOperations(str);
           break;
-        case SemanticProcedures.p6:
+        case SemanticProcedure.p6:
           handleDividers(str);
           break;
         default:
           break;
       }
 
-      final div = DividerTokens.check(char);
+      // final div = DividerTokens.check(char);
 
-      if ([
-        DividerTokens.whitespace,
-        DividerTokens.newLine,
-        DividerTokens.newLineWindows,
-      ].contains(div)) {
-        addToken(div);
-      }
+      // if ([
+      //   DividerTokens.whitespace,
+      //   DividerTokens.newLine,
+      //   DividerTokens.newLineWindows,
+      // ].contains(div)) {
+      //   addToken(div);
+      // }
+
+      if (procedure != null) buffer.clear();
 
       buffer.write(char);
-
-      if (stateOut.semanticProcedure != null) buffer.clear();
     }
 
     return outputTokens;

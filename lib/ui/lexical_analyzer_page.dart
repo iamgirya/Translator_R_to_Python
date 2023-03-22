@@ -42,14 +42,8 @@ class _LexicalAnalyzerPageState extends ConsumerState<_LexicalAnalyzerPage> {
     outputController.text = output;
   }
 
-  final inputController = TextEditingController();
+  final inputController = TextEditingController(text: kSample1JaveCode);
   final outputController = TextEditingController();
-
-  @override
-  void initState() {
-    inputController.addListener(f);
-    super.initState();
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -80,6 +74,7 @@ class _LexicalAnalyzerPageState extends ConsumerState<_LexicalAnalyzerPage> {
                 ),
               ),
               const SizedBox(width: 16),
+              ElevatedButton(onPressed: f, child: const Text('start')),
               SizedBox(
                 width: 400,
                 child: Flexible(
