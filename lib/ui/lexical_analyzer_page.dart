@@ -43,6 +43,8 @@ class _LexicalAnalyzerPageState extends ConsumerState<_LexicalAnalyzerPage> {
         .join(" ");
 
     outputController.text = output;
+
+    setState(() {});
   }
 
   final inputController = TextEditingController(text: kSample1JaveCode);

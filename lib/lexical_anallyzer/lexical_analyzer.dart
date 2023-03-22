@@ -20,23 +20,23 @@ enum SemanticProcedure {
 
 String kSample1JaveCode = """
 int c = 3;
-        int b;
-        String f;
-        int a = 1;
-        int e3 = 2;
-        int chh = 0;
-        if (c > 2.79) {
-            b = a * e3;
-            f = "as ;ds";
-            chh += 1;
-        }
-        int count = 0;
-        while(true) {
-            count ++;
-            if (count == 12) {
-                break;
-            }
-        }
+int b;
+String f;
+int a = 1;
+int e3 = 2;
+int chh = 0;
+if (c > 2.79) {
+    b = a * e3;
+    f = "as ;ds";
+    chh += 1;
+}
+int count = 0;
+while(true) {
+    count ++;
+    if (count == 12) {
+        break;
+    }
+}
 """;
 
 class LexicalAnalyzer {
@@ -72,21 +72,27 @@ class LexicalAnalyzer {
       switch (procedure) {
         case SemanticProcedure.p1:
           handleKeyWordsAndOperations(str);
+          handleDividers(char);
           break;
         case SemanticProcedure.p2:
           handleIdentifiers(str);
+          handleDividers(char);
           break;
         case SemanticProcedure.p3:
           handleNumbers(str);
+          handleDividers(char);
           break;
         case SemanticProcedure.p4:
           handleString(str);
+          handleDividers(char);
           break;
         case SemanticProcedure.p5:
           handleOperations(str);
+          handleDividers(char);
           break;
         case SemanticProcedure.p6:
           handleDividers(str);
+          handleDividers(char);
           break;
         default:
           break;
@@ -94,9 +100,11 @@ class LexicalAnalyzer {
 
       if (nextState is S) buffer.clear();
 
-      buffer.write(char);
+      if (nextState is! S) buffer.write(char);
 
-      // final div = DividerTokens.check(char);
+      final div = DividerTokens.check(char);
+
+      // addToken(div);
 
       // if ([
       //   DividerTokens.whitespace,
@@ -122,7 +130,7 @@ class LexicalAnalyzer {
   }
 
   void handleKeyWordsAndOperations(String str) {
-    str = str.trim();
+    // str = str.trim();
     Token? token = KeyWordTokens.check(str);
     token ??= OperationTokens.check(str);
 
@@ -151,6 +159,7 @@ class LexicalAnalyzer {
   }
 
   void handleNumbers(String str) {
+    str = str.replaceAll(' ', '');
     ValueToken? token;
 
     if (num.tryParse(str) != null) {
@@ -162,7 +171,7 @@ class LexicalAnalyzer {
       valuesNums.add(token);
       addToken(token);
     } else {
-      throw Exception("handleNumbers error");
+      // throw Exception("handleNumbers error");
     }
   }
 
