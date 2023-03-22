@@ -77,7 +77,8 @@ class _LexicalAnalyzerPageState extends ConsumerState<_LexicalAnalyzerPage> {
                 ),
               ),
               const SizedBox(width: 16),
-              ElevatedButton(onPressed: f, child: const Text('start')),
+              ElevatedButton(onPressed: f, child: const Text('  --->  ')),
+              const SizedBox(width: 16),
               SizedBox(
                 width: 400,
                 child: Flexible(
@@ -99,30 +100,41 @@ class _LexicalAnalyzerPageState extends ConsumerState<_LexicalAnalyzerPage> {
               ),
             ],
           ),
-          Row(
-            children: [
-              TokensTextField(
-                tokens: anOutput?.keyWords ?? [],
-              ),
-              TokensTextField(
-                tokens: anOutput?.identifiers ?? [],
-              ),
-              TokensTextField(
-                tokens: anOutput?.numberValues ?? [],
-              ),
-              TokensTextField(
-                tokens: anOutput?.stringValues ?? [],
-              ),
-              TokensTextField(
-                tokens: anOutput?.boolValues ?? [],
-              ),
-              TokensTextField(
-                tokens: anOutput?.operations ?? [],
-              ),
-              TokensTextField(
-                tokens: anOutput?.dividers ?? [],
-              ),
-            ],
+          const SizedBox(height: 32),
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              children: [
+                if (anOutput?.keyWords.isNotEmpty ?? false)
+                  TokensTextField(
+                    tokens: anOutput?.keyWords ?? [],
+                  ),
+                if (anOutput?.identifiers.isNotEmpty ?? false)
+                  TokensTextField(
+                    tokens: anOutput?.identifiers ?? [],
+                  ),
+                if (anOutput?.numberValues.isNotEmpty ?? false)
+                  TokensTextField(
+                    tokens: anOutput?.numberValues ?? [],
+                  ),
+                if (anOutput?.stringValues.isNotEmpty ?? false)
+                  TokensTextField(
+                    tokens: anOutput?.stringValues ?? [],
+                  ),
+                if (anOutput?.boolValues.isNotEmpty ?? false)
+                  TokensTextField(
+                    tokens: anOutput?.boolValues ?? [],
+                  ),
+                if (anOutput?.operations.isNotEmpty ?? false)
+                  TokensTextField(
+                    tokens: anOutput?.operations ?? [],
+                  ),
+                if (anOutput?.dividers.isNotEmpty ?? false)
+                  TokensTextField(
+                    tokens: anOutput?.dividers ?? [],
+                  ),
+              ],
+            ),
           )
         ],
       ),
@@ -145,24 +157,27 @@ class TokensTextField extends ConsumerWidget {
           .map((e) => "\"${e.encode()}\": \"${e.value}\" ")
           .join(",\n");
     }
-    return SizedBox(
-      width: 200,
-      child: Flexible(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              tokens.isNotEmpty
-                  ? tokens.first.runtimeType.toString()
-                  : 'Tokens',
-              style: Theme.of(context).textTheme.headlineSmall,
-            ),
-            const SizedBox(height: 8),
-            TextField(
-              controller: TextEditingController(text: map),
-              maxLines: 32,
-            ),
-          ],
+    return Padding(
+      padding: const EdgeInsets.only(right: 32),
+      child: SizedBox(
+        width: 200,
+        child: Flexible(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                tokens.isNotEmpty
+                    ? tokens.first.runtimeType.toString()
+                    : 'Tokens',
+                style: Theme.of(context).textTheme.headlineSmall,
+              ),
+              const SizedBox(height: 8),
+              TextField(
+                controller: TextEditingController(text: map),
+                maxLines: 32,
+              ),
+            ],
+          ),
         ),
       ),
     );
