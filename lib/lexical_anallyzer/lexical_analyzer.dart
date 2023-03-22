@@ -63,7 +63,7 @@ class LexicalAnalyzer {
     for (int i = 0; i < inputCode.length; i++) {
       var char = inputCode[i];
 
-      final (_, procedure) =
+      final (nextState, procedure) =
           stateMachine.execute(char, i == inputCode.length - 1);
 
       final str = buffer.toString();
@@ -91,6 +91,10 @@ class LexicalAnalyzer {
           break;
       }
 
+      if (nextState is S) buffer.clear();
+
+      buffer.write(char);
+
       // final div = DividerTokens.check(char);
 
       // if ([
@@ -100,16 +104,13 @@ class LexicalAnalyzer {
       // ].contains(div)) {
       //   addToken(div);
       // }
-
-      if (procedure != null) buffer.clear();
-
-      buffer.write(char);
     }
 
     return outputTokens;
   }
 
   void handleKeyWordsAndOperations(String str) {
+    str = str.trim();
     Token? token = KeyWordTokens.check(str);
     token ??= OperationTokens.check(str);
 
