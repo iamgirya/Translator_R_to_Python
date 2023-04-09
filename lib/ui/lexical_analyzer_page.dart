@@ -32,7 +32,7 @@ class _LexicalAnalyzerPageState extends ConsumerState<_LexicalAnalyzerPage> {
 
   @override
   Widget build(BuildContext context) {
-    final anOutput = ref.watch(tokenOutputProveder);
+    final anOutput = ref.watch(tokenOutputProvider);
     return SingleChildScrollView(
       padding: const EdgeInsets.symmetric(horizontal: 36, vertical: 24),
       scrollDirection: Axis.horizontal,
@@ -58,17 +58,17 @@ class _LexicalAnalyzerPageState extends ConsumerState<_LexicalAnalyzerPage> {
               ),
             ),
           ),
-          if (anOutput?.identifiers.isNotEmpty ?? false)
+          if (anOutput.identifiers.isNotEmpty)
             TokensTextField(
-              tokens: anOutput?.identifiers ?? [],
+              tokens: anOutput.identifiers,
             ),
-          if ((anOutput?.numberValues.isNotEmpty ?? false) ||
-              (anOutput?.stringValues.isNotEmpty ?? false) ||
-              (anOutput?.boolValues.isNotEmpty ?? false))
+          if ((anOutput.numberValues.isNotEmpty) ||
+              (anOutput.stringValues.isNotEmpty) ||
+              (anOutput.boolValues.isNotEmpty))
             TokensTextField(
-              tokens: (anOutput?.numberValues ?? []) +
-                  (anOutput?.stringValues ?? []) +
-                  (anOutput?.boolValues ?? []),
+              tokens: (anOutput.numberValues) +
+                  (anOutput.stringValues) +
+                  (anOutput.boolValues),
             ),
           Container(
             padding: const EdgeInsets.only(left: 16),

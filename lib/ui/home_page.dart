@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../reverse_polish_entry/reverse_polish_entry.dart';
 import 'lexical_analyzer_page.dart';
 
 import '../core/providers.dart';
 import '../lexical_anallyzer/lexical_analyzer.dart';
-import '../lexical_anallyzer/tokens/divider_tokens.dart';
 
 class HomePage extends ConsumerStatefulWidget {
   const HomePage({super.key});
@@ -17,22 +17,24 @@ class HomePage extends ConsumerStatefulWidget {
 class _HomePageState extends ConsumerState<HomePage> {
   void generateTokens() {
     String inputText = ref.read(inputProvider).text;
+    final tokenOutput = ref.read(tokenOutputProvider.notifier);
+
+    tokenOutput.update((state) => LexicalAnalyzer().execute(inputText));
+    String output = tokenOutput.state.convertToText();
+
+    ref.read(outputProvider).text = output;
+  }
+
+  void generateReversePolishEntry() {
+    String inputText = ref.read(inputProvider).text;
 
     ref
-        .read(tokenOutputProveder.notifier)
+        .read(tokenOutputProvider.notifier)
         .update((state) => LexicalAnalyzer().execute(inputText));
 
-    String output = ref
-        .read(tokenOutputProveder)!
-        .tokens
-        .map(
-          (e) => e == DividerTokens.whitespace
-              ? ""
-              : DividerTokens.isNewLine(e)
-                  ? "\n"
-                  : e.encode(),
-        )
-        .join(" ");
+    String output = ReversePolishEntry()
+        .execute(ref.read(tokenOutputProvider))
+        .convertToText();
 
     ref.read(outputProvider).text = output;
   }
@@ -53,21 +55,45 @@ class _HomePageState extends ConsumerState<HomePage> {
         ),
       ),
       body: const LexicalAnalyzerPage(),
-      floatingActionButton: ElevatedButton(
-        style: ButtonStyle(
-          backgroundColor: MaterialStateProperty.all<Color>(
-            Theme.of(context).colorScheme.primary,
+      floatingActionButton: Column(
+        mainAxisAlignment: MainAxisAlignment.end,
+        children: [
+          ElevatedButton(
+            style: ButtonStyle(
+              backgroundColor: MaterialStateProperty.all<Color>(
+                Theme.of(context).colorScheme.primary,
+              ),
+            ),
+            onPressed: () {
+              setState(() {
+                generateTokens();
+              });
+            },
+            child: Text(
+              'Лаба 1',
+              style: TextStyle(color: Theme.of(context).colorScheme.onPrimary),
+            ),
           ),
-        ),
-        onPressed: () {
-          setState(() {
-            generateTokens();
-          });
-        },
-        child: Text(
-          'Перевести',
-          style: TextStyle(color: Theme.of(context).colorScheme.onPrimary),
-        ),
+          const SizedBox(
+            height: 15,
+          ),
+          ElevatedButton(
+            style: ButtonStyle(
+              backgroundColor: MaterialStateProperty.all<Color>(
+                Theme.of(context).colorScheme.primary,
+              ),
+            ),
+            onPressed: () {
+              setState(() {
+                generateTokens();
+              });
+            },
+            child: Text(
+              'Лаба 2',
+              style: TextStyle(color: Theme.of(context).colorScheme.onPrimary),
+            ),
+          ),
+        ],
       ),
     );
   }

@@ -12,6 +12,6 @@ final outputProvider = StateProvider<TextEditingController>((ref) {
   return TextEditingController();
 });
 
-final tokenOutputProveder = StateProvider<LexicalAnalyzerOutput?>((ref) {
-  return null;
+final tokenOutputProvider = StateProvider<LexicalAnalyzerOutput>((ref) {
+  return LexicalAnalyzerOutput.empty();
 });

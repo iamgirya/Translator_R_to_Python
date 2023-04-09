@@ -1,268 +1,356 @@
-// CLASSES_OF_TOKENS = ['W', 'I', 'O', 'R', 'N', 'C']
+import '../lexical_anallyzer/models/lexical_analyzer_output.dart';
 
-//     def is_identifier(token):
-//         return re.match(r'^I\d+$', inverse_tokens[token])
+final class ReversePolishEntryOutput {
+  final List<String> rezult;
 
-//     def get_priority(token):
-//         if token in ['(', 'for', 'if', 'while', '[', 'АЭМ', 'Ф', '{']:
-//             return 0
-//         if token in [')', ',', ';', 'do', 'else', ']']:
-//             return 1
-//         if token == '=':
-//             return 2
-//         if token == '||':
-//             return 3
-//         if token == '&&':
-//             return 4
-//         if token == '!':
-//             return 5
-//         if token in ['<', '<=', '!=', '=', '>', '>=']:
-//             return 6
-//         if token in ['+', '-', '+=', '-=', '*=', '/=']:
-//             return 7
-//         if token in ['*', '/', '%']:
-//             return 8
-//         if token in ['}', 'public.static.void', 'procedure','int', 'double', 'boolean', 'String', 'float', 'args','return','System.out.println', 'main']:
-//             return 9
-//         return -1
+  // create consctructor
+  ReversePolishEntryOutput({
+    required this.rezult,
+  });
 
-//     # лексемы (код-значение)
-//     tokens = {}
+  String convertToText() {
+    return rezult.fold(
+      '',
+      (previousValue, element) => '$previousValue $element',
+    );
+  }
+}
 
-//     # файлы, содержащие все таблицы лексем
-//     for token_class in CLASSES_OF_TOKENS:
-//         with open('%s.json' % token_class, 'r') as read_file:
-//             data = json.load(read_file)
-//             tokens.update(data)
+class ReversePolishEntry {
+  int _getPriority(String token) {
+    if (['(', 'for', 'if', 'while', '[', 'АЭМ', 'Ф', '{'].contains(token)) {
+      return 0;
+    }
+    if ([')', ',', ';', 'do', 'else', ']'].contains(token)) {
+      return 1;
+    }
+    if (token == '=') {
+      return 2;
+    }
+    if (token == '||') {
+      return 3;
+    }
+    if (token == '&&') {
+      return 4;
+    }
+    if (token == '!') {
+      return 5;
+    }
+    if (['<', '<=', '!=', '=', '>', '>='].contains(token)) {
+      return 6;
+    }
+    if (['+', '-', '+=', '-=', '*=', '/='].contains(token)) {
+      return 7;
+    }
+    if (['*', '/', '%'].contains(token)) {
+      return 8;
+    }
+    if ([
+      '}',
+      'public.static.void',
+      'procedure',
+      'int',
+      'double',
+      'boolean',
+      'String',
+      'float',
+      'args',
+      'return',
+      'System.out.println',
+      'main'
+    ].contains(token)) {
+      return 9;
+    }
+    return -1;
+  }
 
-//     # лексемы (значение-код)
-//     inverse_tokens = {val: key for key, val in tokens.items()}
+  ReversePolishEntryOutput execute(LexicalAnalyzerOutput input) {
+    List<String> identifiers = input.identifiers.map((e) => e.lexeme).toList();
+    List<String> t = input.tokens.map((e) => e.lexeme).toList();
 
-//     # файл, содержащий последовательность кодов лексем входной программы
-//     f = open('tokens.txt', 'r')
-//     inp_seq = f.read()
-//     f.close()
+    List<String> stack = [], rezult = [];
+    int aemCount = 1, procLevel = 1, operandCount = 1;
+    int funcCount = 0,
+        tagCount = 0,
+        procNum = 0,
+        ifCount = 0,
+        whileCount = 0,
+        beginCount = 0,
+        endCount = 0,
+        bracketCount = 0;
+    int i = 0;
 
-//     regexp = '[' + '|'.join(CLASSES_OF_TOKENS) + ']' + '\d+'
-//     match = re.findall(regexp, inp_seq)
+    bool isIf = false, isWhile = false, isDescriptionVar = false;
 
-//     t = [tokens[i] for i in match]
+    while (i < t.length) {
+      int p = _getPriority(t[i]);
+      if (p == -1) {
+        if (t[i] != '\n' && t[i] != '\t') {
+          rezult.add('${t[i]} ');
+        }
+      } else {
+        if (t[i] == '[') {
+          aemCount += 1;
+          stack.add('$aemCount АЭМ');
+        } else if (t[i] == ']') {
+          while (!(RegExp(r'^\d+ АЭМ$').hasMatch(stack.last))) {
+            rezult.add('${stack.removeLast()} ');
+          }
+          rezult.add('${stack.removeLast()} ');
+          aemCount = 1;
+        } else if (t[i] == '(') {
+          if (identifiers.contains(t[i - 1])) {
+            if (t[i + 1] != ')') {
+              funcCount += 1;
+            }
+            stack.add('$funcCount Ф');
+          } else {
+            stack.add(t[i]);
+          }
+          bracketCount += 1;
+        } else if (t[i] == ')') {
+          while (
+              stack.last != '(' && !(RegExp(r'^\d+ Ф$').hasMatch(stack.last))) {
+            rezult.add('${stack.removeLast()} ');
+          }
+          if (RegExp(r'^\d+ Ф$').hasMatch(stack.last)) {
+            stack.add('${funcCount + 1} Ф');
+            funcCount = 0;
+          }
+          stack.removeLast();
+          bracketCount -= 1;
+          if (bracketCount == 0) {
+            if (isIf) {
+              while (stack.last != 'if') {
+                rezult.add('${stack.removeLast()} ');
+              }
+              tagCount += 1;
+              stack.last += ' М$tagCount';
+              rezult.add('М$tagCount УПЛ ');
+              isIf = false;
+            }
+            if (isWhile) {
+              while (!(RegExp(r'^while М\d+$').hasMatch(stack.last))) {
+                rezult.add('${stack.removeLast()} ');
+              }
+              tagCount += 1;
+              rezult.add('М$tagCount УПЛ ');
+              stack.last += ' М$tagCount';
+              isWhile = false;
+            }
+          }
+        } else if (t[i] == ',') {
+          while (!(RegExp(r'^\d+ АЭМ$').hasMatch(stack.last)) &&
+              !(RegExp(r'^\d+ Ф$').hasMatch(stack.last)) &&
+              !(RegExp(r'^var').hasMatch(stack.last))) {
+            rezult.add('${stack.removeLast()} ');
+          }
+          if (RegExp(r'^\d+ АЭМ$').hasMatch(stack.last)) {
+            aemCount += 1;
+            stack.add('$aemCount АЭМ');
+          }
+          if (RegExp(r'^\d+ Ф$').hasMatch(stack.last)) {
+            funcCount += 1;
+            stack.add('$funcCount Ф');
+          }
+        } else if (t[i] == 'if') {
+          stack.add(t[i]);
+          ifCount += 1;
+          bracketCount = 0;
+          isIf = true;
+        } else if (t[i] == 'else') {
+          while (!(RegExp(r'^if М\d+$').hasMatch(stack.last))) {
+            rezult.add('${stack.removeLast()} ');
+          }
+          stack.removeLast();
+          tagCount += 1;
+          stack.add('if М$tagCount');
+          rezult.add('М$tagCount БП М${tagCount - 1} ) { ');
+        } else if (t[i] == 'while') {
+          tagCount += 1;
+          stack.add('${t[i]} М$tagCount');
+          rezult.add('М$tagCount ) { ');
+          whileCount += 1;
+          bracketCount = 0;
+          isWhile = true;
+        } else if (t[i] == 'for') {
+          int j = i + 2;
+          bracketCount = 1;
+          List<String> a = [];
+          while (t[j] != ';') {
+            a.add(t[j]);
+            j += 1;
+            if (t[j] == '(') {
+              bracketCount += 1;
+            } else if (t[j] == ')') {
+              bracketCount -= 1;
+            }
+          }
+          j += 1;
+          List<String> b = [];
+          while (t[j] != ';') {
+            b.add(t[j]);
+            j += 1;
+            if (t[j] == '(') {
+              bracketCount += 1;
+            } else if (t[j] == ')') {
+              bracketCount -= 1;
+            }
+          }
+          j += 1;
+          List<String> c = [];
+          while (bracketCount != 0) {
+            c.add(t[j]);
+            j += 1;
+            if (t[j] == '(') {
+              bracketCount += 1;
+            } else if (t[j] == ')') {
+              bracketCount -= 1;
+            }
+          }
+          j += 1;
+          List<String> d = [];
+          while (t[j] != ';' && t[j] != '{') {
+            d.add(t[j]);
+            j += 1;
+          }
+          if (t[j] == '{') {
+            j += 1;
+            bracketCount = 1;
+            d = ['{'];
+            while (bracketCount != 0) {
+              d.add(t[j]);
+              j += 1;
+              if (t[j] == '{') {
+                bracketCount += 1;
+              } else if (t[j] == '}') {
+                bracketCount -= 1;
+              }
+            }
+            d.add('}');
+          }
+          j += 1;
+          //варнинг
+          t = t.take(14).toList() +
+              a +
+              [';', '\n', 'while', '('] +
+              b +
+              [')', '{', '\n'] +
+              d +
+              ['\n'] +
+              c +
+              [';', '\n', '}'] +
+              t.skip(46).toList();
+          i -= 1;
+        } else if (t[i] == 'sub') {
+          procNum += 1;
+          stack.add('PROC $procNum $procLevel');
+        } else if (t[i] == '{') {
+          if (stack.isNotEmpty && RegExp(r'^PROC').hasMatch(stack.last)) {
+            final number = RegExp(r'\d+').allMatches(stack.last).toList();
+            stack.removeLast();
+            rezult.add('0 Ф ${number[0]} ${number[1]} НП ');
+            stack.add('PROC $procNum $procLevel');
+          }
+          beginCount += 1;
+          procLevel = beginCount - endCount + 1;
+          stack.add(t[i]);
+        } else if (t[i] == '}') {
+          endCount += 1;
+          procLevel = beginCount - endCount + 1;
+          while (stack.last != '{') {
+            rezult.add('${stack.removeLast()} ');
+          }
+          stack.removeLast();
+          if (stack.isNotEmpty && RegExp(r'^PROC').hasMatch(stack.last)) {
+            stack.removeLast();
+            rezult.add('КП ');
+          }
+          if (ifCount > 0 && RegExp(r'^if М\d+$').hasMatch(stack.last)) {
+            String tag = RegExp('М\d+').firstMatch(stack.last)!.input;
+            int j = i + 1;
+            while (j < t.length && t[j] == '\n') {
+              j += 1;
+            }
+            if (j >= t.length || t[j] != 'else') {
+              stack.removeLast();
+              rezult.add('$tag ) { ');
+              ifCount -= 1;
+            }
+          }
+          if (whileCount > 0 &&
+              RegExp(r'^while М\d+ М\d+$').hasMatch(stack.last)) {
+            final tag = RegExp('М\d+').allMatches(stack.last).toList();
+            stack.removeLast();
+            rezult.add('${tag[0]} БП ${tag[1]} ) { ');
+            whileCount -= 1;
+          }
+        } else if (t[i] == ';') {
+          if (stack.isNotEmpty && RegExp(r'^PROC').hasMatch(stack.last)) {
+            // toList ??
+            final number = RegExp(r'\d+').allMatches(stack.last).toList();
+            stack.removeLast();
+            rezult.add('${number[0]} ${number[1]} НП ');
+          } else if (stack.isNotEmpty && stack.last == 'end') {
+            stack.removeLast();
+            rezult.add('КП ');
+          } else if (isDescriptionVar) {
+            //??
+            final tag = RegExp('\d+').allMatches(stack.last).toList();
+            procNum = int.parse(tag[0].input);
+            procLevel = int.parse(tag[1].input);
+            stack.removeLast();
+            rezult.add('$operandCount $procNum $procLevel КО ');
+            isDescriptionVar = false;
+          } else if (ifCount > 0 || whileCount > 0) {
+            while (!(stack.isNotEmpty && stack.last == '{') &&
+                !(ifCount > 0 && RegExp(r'^if М\d+$').hasMatch(stack.last)) &&
+                !(whileCount > 0 &&
+                    RegExp(r'^while М\d+ М\d+$').hasMatch(stack.last))) {
+              rezult.add('${stack.removeLast()} ');
+            }
+            if (ifCount > 0 && RegExp(r'^if М\d+$').hasMatch(stack.last)) {
+              //input ??
+              String tag = RegExp('М\d+').allMatches(stack.last).first.input;
+              int j = i + 1;
+              while (t[j] == '\n') {
+                j += 1;
+              }
+              if (t[j] != 'else') {
+                stack.removeLast();
+              }
+              rezult.add('$tag ) { ');
+              ifCount -= 1;
+            }
+            if (whileCount > 0 &&
+                RegExp(r'^while М\d+ М\d+$').hasMatch(stack.last)) {
+              final tag = RegExp('М\d+').allMatches(stack.last);
+              String tag1 = tag.first.input;
+              String tag2 = tag.skip(1).first.input;
+              rezult.add('$tag1 БП $tag2 ) { ');
+              whileCount -= 1;
+            }
+          } else {
+            while (stack.isNotEmpty && stack.last != '{') {
+              rezult.add('${stack.removeLast()} ');
+            }
+          }
+        } else {
+          while (stack.isNotEmpty && _getPriority(stack.last) >= p) {
+            rezult.add('${stack.removeLast()} ');
+          }
+          stack.add(t[i]);
+        }
+        i += 1;
+      }
+    }
 
-//     i = 0
-//     stack = []
-//     out_seq = ''
-//     aem_count = proc_num = proc_level = operand_count = 1
-//     func_count = tag_count = proc_num = if_count = while_count = \
-//                 begin_count = end_count = bracket_count = 0
-//     is_if = is_while = is_description_var = False
-//     while i < len(t):
-//         p = get_priority(t[i])
-//         if p == -1:
-//             if t[i] != '\n' and t[i] != '\t':
-//                 out_seq += t[i] + ' '
-//         else:
-//             if t[i] == '[':
-//                 aem_count += 1
-//                 stack.append(str(aem_count) + ' АЭМ')
-//             elif t[i] == ']':
-//                 while not(re.match(r'^\d+ АЭМ$', stack[-1])):
-//                     out_seq += stack.pop() + ' '
-//                 out_seq += stack.pop() + ' '
-//                 aem_count = 1
-//             elif t[i] == '(':
-//                 if is_identifier(t[i - 1]):
-//                     if t[i + 1] != ')':
-//                         func_count += 1
-//                     stack.append(str(func_count) + ' Ф')
-//                 else:
-//                     stack.append(t[i])
-//                 bracket_count += 1
-//             elif t[i] == ')':
-//                 while stack[-1] != '(' and not(re.match(r'^\d+ Ф$', stack[-1])):
-//                     out_seq += stack.pop() + ' '
-//                 if re.match(r'^\d+ Ф$', stack[-1]):
-//                     stack.append(str(func_count + 1) + ' Ф')
-//                     func_count = 0
-//                 stack.pop()
-//                 bracket_count -= 1
-//                 if bracket_count == 0:
-//                     if is_if:
-//                         while stack[-1] != 'if':
-//                             out_seq += stack.pop() + ' '
-//                         tag_count += 1
-//                         stack[-1] += ' М' + str(tag_count)
-//                         out_seq += 'М' + str(tag_count) + ' УПЛ '
-//                         is_if = False
-//                     if is_while:
-//                         while not(re.match(r'^while М\d+$', stack[-1])):
-//                             out_seq += stack.pop() + ' '
-//                         tag_count += 1
-//                         out_seq += 'М' + str(tag_count) + ' УПЛ '
-//                         stack[-1] += ' М' + str(tag_count)
-//                         is_while = False
-//             elif t[i] == ',':
-//                 while not(re.match(r'^\d+ АЭМ$', stack[-1])) and \
-//                     not(re.match(r'^\d+ Ф$', stack[-1])) and \
-//                     not(re.match(r'^var', stack[-1])):
-//                     out_seq += stack.pop() + ' '
-//                 if re.match(r'^\d+ АЭМ$', stack[-1]):
-//                     aem_count += 1
-//                     stack.append(str(aem_count) + ' АЭМ')
-//                 if re.match(r'^\d+ Ф$', stack[-1]):
-//                     func_count += 1
-//                     stack.append(str(func_count) + ' Ф')
-//             elif t[i] == 'if':
-//                 stack.append(t[i])
-//                 if_count += 1
-//                 bracket_count = 0
-//                 is_if = True
-//             elif t[i] == 'else':
-//                 while not(re.match(r'^if М\d+$', stack[-1])):
-//                     out_seq += stack.pop() + ' '
-//                 stack.pop()
-//                 tag_count += 1
-//                 stack.append('if М' + str(tag_count))
-//                 out_seq += 'М' + str(tag_count) + ' БП М' + str(tag_count - 1) + ' : '
-//             elif t[i] == 'while':
-//                 tag_count += 1
-//                 stack.append(t[i] + ' М' + str(tag_count))
-//                 out_seq += 'М' + str(tag_count) + ' : '
-//                 while_count += 1
-//                 bracket_count = 0
-//                 is_while = True
-//             elif t[i] == 'for':
-//                 j = i + 2
-//                 bracket_count = 1
-//                 a = []
-//                 while t[j] != ';':
-//                     a.append(t[j])
-//                     j += 1
-//                     if t[j] == '(':
-//                         bracket_count += 1
-//                     elif t[j] == ')':
-//                         bracket_count -= 1
-//                 j += 1
-//                 b = []
-//                 while t[j] != ';':
-//                     b.append(t[j])
-//                     j += 1
-//                     if t[j] == '(':
-//                         bracket_count += 1
-//                     elif t[j] == ')':
-//                         bracket_count -= 1
-//                 j += 1
-//                 c = []
-//                 while bracket_count != 0:
-//                     c.append(t[j])
-//                     j += 1
-//                     if t[j] == '(':
-//                         bracket_count += 1
-//                     elif t[j] == ')':
-//                         bracket_count -= 1
-//                 j += 1
-//                 d = []
-//                 while t[j] != ';' and t[j] != '{':
-//                     d.append(t[j])
-//                     j += 1
-//                 if t[j] == '{':
-//                     j += 1
-//                     bracket_count = 1
-//                     d = ['{']
-//                     while bracket_count != 0:
-//                         d.append(t[j])
-//                         j += 1
-//                         if t[j] == '{':
-//                             bracket_count += 1
-//                         elif t[j] == '}':
-//                             bracket_count -= 1
-//                     d.append('}')
-//                 j += 1
-//                 t = t[:i] + a + [';', '\n', 'while', '('] + b + [')', '{', '\n'] + d + \
-//                     ['\n'] + c + [';', '\n', '}'] + t[j:]
-//                 i -= 1
-//             elif t[i] == 'sub':
-//                 proc_num += 1
-//                 stack.append('PROC ' + str(proc_num) + ' ' + str(proc_level))
-//             elif t[i] == '{':
-//                 if len(stack) > 0 and re.match(r'^PROC', stack[-1]):
-//                     num = re.findall(r'\d+', stack[-1])
-//                     stack.pop()
-//                     out_seq += '0 Ф ' + str(num[0]) + ' ' + str(num[1]) + ' НП '
-//                     stack.append('PROC ' + str(proc_num) + ' ' + str(proc_level))
-//                 begin_count += 1
-//                 proc_level = begin_count - end_count + 1
-//                 stack.append(t[i])
-//             elif t[i] == '}':
-//                 end_count += 1
-//                 proc_level = begin_count - end_count + 1
-//                 while stack[-1] != '{':
-//                     out_seq += stack.pop() + ' '
-//                 stack.pop()
-//                 if len(stack) > 0 and re.match(r'^PROC', stack[-1]):
-//                     stack.pop()
-//                     out_seq += 'КП '
-//                 if if_count > 0 and re.match(r'^if М\d+$', stack[-1]):
-//                     tag = re.search('М\d+', stack[-1]).group(0)
-//                     j = i + 1
-//                     while j < len(t) and t[j] == '\n':
-//                         j += 1
-//                     if j >= len(t) or t[j] != 'else':
-//                         stack.pop()
-//                         out_seq += tag + ' : '
-//                         if_count -= 1
-//                 if while_count > 0 and re.match(r'^while М\d+ М\d+$', stack[-1]):
-//                     tag = re.findall('М\d+', stack[-1])
-//                     stack.pop()
-//                     out_seq += tag[0] + ' БП ' + tag[1] + ' : '
-//                     while_count -= 1
-//             elif t[i] == ';':
-//                 if len(stack) > 0 and re.match(r'^PROC', stack[-1]):
-//                     num = re.findall(r'\d+', stack[-1])
-//                     stack.pop()
-//                     out_seq += str(num[0]) + ' ' + str(num[1]) + ' НП '
-//                 elif len(stack) > 0 and stack[-1] == 'end':
-//                     stack.pop()
-//                     out_seq += 'КП '
-//                 elif is_description_var:
-//                     proc_num, proc_level = re.findall('\d+', stack[-1])
-//                     stack.pop()
-//                     out_seq += str(operand_count) + ' ' + proc_num + ' ' + proc_level + \
-//                             ' КО '
-//                     is_description_var = False
-//                 elif if_count > 0 or while_count > 0:
-//                     while not(len(stack) > 0 and stack[-1] == '{') and \
-//                         not(if_count > 0 and re.match(r'^if М\d+$', stack[-1])) and \
-//                         not(while_count > 0 and re.match(r'^while М\d+ М\d+$', stack[-1])):
-//                         out_seq += stack.pop() + ' '
-//                     if if_count > 0 and re.match(r'^if М\d+$', stack[-1]):
-//                         tag = re.search('М\d+', stack[-1]).group(0)
-//                         j = i + 1
-//                         while t[j] == '\n':
-//                             j += 1
-//                         if t[j] != 'else':
-//                             stack.pop()
-//                         out_seq += tag + ' : '
-//                         if_count -= 1
-//                     if while_count > 0 and re.match(r'^while М\d+ М\d+$', stack[-1]):
-//                         tag = re.findall('М\d+', stack[-1])
-//                         out_seq += tag[0] + ' БП ' + tag[1] + ' : '
-//                         while_count -= 1
-//                 else:
-//                     while len(stack) > 0 and stack[-1] != '{':
-//                         out_seq += stack.pop() + ' '
-//             else:
-//                 while len(stack) > 0 and get_priority(stack[-1]) >= p:
-//                     out_seq += stack.pop() + ' '
-//                 stack.append(t[i])
-//         i += 1
+    while (stack.isNotEmpty) {
+      rezult.add('${stack.removeLast()} ');
+    }
+    rezult[rezult.indexOf("System . out . println")] = "System.out.println";
+    //rezult = re.sub(r'(\d) Ф', r'\1Ф', rezult);
 
-//     while len(stack) > 0:
-//         out_seq += stack.pop() + ' '
-
-//     out_seq = out_seq.replace("System . out . println", "System.out.println")
-//     out_seq = re.sub(r'(\d) Ф', r'\1Ф', out_seq)
-
-//     # файл, содержащий обратную польскую запись
-//     f = open('reverse_polish_entry.txt', 'w')
-//     f.write(out_seq)
-//     f.close()
+    return ReversePolishEntryOutput(rezult: rezult);
+  }
+}

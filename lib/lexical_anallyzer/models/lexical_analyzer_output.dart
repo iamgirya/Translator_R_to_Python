@@ -26,4 +26,26 @@ final class LexicalAnalyzerOutput {
     required this.operations,
     required this.dividers,
   });
+
+  LexicalAnalyzerOutput.empty()
+      : tokens = [],
+        keyWords = [],
+        identifiers = [],
+        numberValues = [],
+        stringValues = [],
+        boolValues = [],
+        operations = [],
+        dividers = [];
+
+  String convertToText() {
+    return tokens
+        .map(
+          (e) => e == DividerTokens.whitespace
+              ? ""
+              : DividerTokens.isNewLine(e)
+                  ? "\n"
+                  : e.encode(),
+        )
+        .join(" ");
+  }
 }

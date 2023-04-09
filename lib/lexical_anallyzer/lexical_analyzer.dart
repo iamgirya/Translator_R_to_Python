@@ -160,7 +160,6 @@ class LexicalAnalyzer {
     }
 
     if (token == null) {
-      var count = str.length;
       token = IdentifierToken(identifiers.length, str);
       identifiers.add(token);
     }
