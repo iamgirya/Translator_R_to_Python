@@ -5,9 +5,9 @@ enum OperationTokens implements Token {
   multiplier("*"),
   plus("+"),
   minus("-"),
-  remainder("%"),
+  remainder("%%"),
+  div("%/%"),
   divider("/"),
-  exclamationMark("!"),
   doublePlus("++"),
   doubleMinus("--"),
   plusEqualTo("+="),
@@ -21,7 +21,11 @@ enum OperationTokens implements Token {
   moreOrEqual(">="),
   isEqual("=="),
   notEqual("!="),
-  equalTo("=");
+  and("&"),
+  or("|"),
+  not("!"),
+  equalTo("="),
+  anotherEqual("<-");
 
   @override
   final String lexeme;

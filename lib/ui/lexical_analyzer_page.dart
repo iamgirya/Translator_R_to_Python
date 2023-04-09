@@ -5,6 +5,7 @@ import '../lexical_anallyzer/lexical_analyzer.dart';
 import '../lexical_anallyzer/models/lexical_analyzer_output.dart';
 import '../lexical_anallyzer/tokens/divider_tokens.dart';
 import '../lexical_anallyzer/tokens/token.dart';
+import '../lexical_anallyzer/tokens/value_tokens.dart';
 
 class LexicalAnalyzerPage extends ConsumerWidget {
   const LexicalAnalyzerPage({
@@ -26,118 +27,71 @@ class _LexicalAnalyzerPage extends ConsumerStatefulWidget {
 }
 
 class _LexicalAnalyzerPageState extends ConsumerState<_LexicalAnalyzerPage> {
-  LexicalAnalyzerOutput? anOutput;
-  void f() {
-    final an = LexicalAnalyzer();
-
-    anOutput = an.execute(inputController.text);
-
-    String output = anOutput!.tokens
-        .map(
-          (e) => e == DividerTokens.whitespace
-              ? ""
-              : DividerTokens.isNewLine(e)
-                  ? "\n"
-                  : e.encode(),
-        )
-        .join(" ");
-
-    outputController.text = output;
-
-    setState(() {});
+  @override
+  void initState() {
+    lol = setState;
+    super.initState();
   }
-
-  final inputController = TextEditingController(text: kSample1JaveCode);
-  final outputController = TextEditingController();
 
   @override
   Widget build(BuildContext context) {
     return SingleChildScrollView(
       padding: const EdgeInsets.symmetric(horizontal: 36, vertical: 24),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      scrollDirection: Axis.horizontal,
+      child: Row(
         children: [
-          Row(
-            children: [
-              SizedBox(
-                width: 400,
-                child: Flexible(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Enter Java code',
-                        style: Theme.of(context).textTheme.headlineSmall,
-                      ),
-                      const SizedBox(height: 8),
-                      TextField(
-                        controller: inputController,
-                        maxLines: 32,
-                      ),
-                    ],
+          Container(
+            padding: EdgeInsets.only(right: 16),
+            width: 400,
+            child: Flexible(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Входной код',
+                    style: Theme.of(context).textTheme.headlineSmall,
                   ),
-                ),
+                  const SizedBox(height: 8),
+                  TextField(
+                    controller: inputController,
+                    maxLines: null,
+                  ),
+                ],
               ),
-              const SizedBox(width: 16),
-              ElevatedButton(onPressed: f, child: const Text('  --->  ')),
-              const SizedBox(width: 16),
-              SizedBox(
-                width: 400,
-                child: Flexible(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Output Tokens',
-                        style: Theme.of(context).textTheme.headlineSmall,
-                      ),
-                      const SizedBox(height: 8),
-                      TextField(
-                        controller: outputController,
-                        maxLines: 32,
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 32),
-          SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: Row(
-              children: [
-                if (anOutput?.keyWords.isNotEmpty ?? false)
-                  TokensTextField(
-                    tokens: anOutput?.keyWords ?? [],
-                  ),
-                if (anOutput?.identifiers.isNotEmpty ?? false)
-                  TokensTextField(
-                    tokens: anOutput?.identifiers ?? [],
-                  ),
-                if (anOutput?.numberValues.isNotEmpty ?? false)
-                  TokensTextField(
-                    tokens: anOutput?.numberValues ?? [],
-                  ),
-                if (anOutput?.stringValues.isNotEmpty ?? false)
-                  TokensTextField(
-                    tokens: anOutput?.stringValues ?? [],
-                  ),
-                if (anOutput?.boolValues.isNotEmpty ?? false)
-                  TokensTextField(
-                    tokens: anOutput?.boolValues ?? [],
-                  ),
-                if (anOutput?.operations.isNotEmpty ?? false)
-                  TokensTextField(
-                    tokens: anOutput?.operations ?? [],
-                  ),
-                if (anOutput?.dividers.isNotEmpty ?? false)
-                  TokensTextField(
-                    tokens: anOutput?.dividers ?? [],
-                  ),
-              ],
             ),
-          )
+          ),
+          if (anOutput?.identifiers.isNotEmpty ?? false)
+            TokensTextField(
+              tokens: anOutput?.identifiers ?? [],
+            ),
+          if ((anOutput?.numberValues.isNotEmpty ?? false) ||
+              (anOutput?.stringValues.isNotEmpty ?? false) ||
+              (anOutput?.boolValues.isNotEmpty ?? false))
+            TokensTextField(
+              tokens: (anOutput?.numberValues ?? []) +
+                  (anOutput?.stringValues ?? []) +
+                  (anOutput?.boolValues ?? []),
+            ),
+          Container(
+            padding: EdgeInsets.only(left: 16),
+            width: 400,
+            child: Flexible(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Выходные токены',
+                    style: Theme.of(context).textTheme.headlineSmall,
+                  ),
+                  const SizedBox(height: 8),
+                  TextField(
+                    controller: outputController,
+                    maxLines: null,
+                  ),
+                ],
+              ),
+            ),
+          ),
         ],
       ),
     );
@@ -160,7 +114,7 @@ class TokensTextField extends ConsumerWidget {
           .join(",\n");
     }
     return Padding(
-      padding: const EdgeInsets.only(right: 32),
+      padding: const EdgeInsets.only(left: 16, right: 16),
       child: SizedBox(
         width: 200,
         child: Flexible(
@@ -168,15 +122,15 @@ class TokensTextField extends ConsumerWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                tokens.isNotEmpty
-                    ? tokens.first.runtimeType.toString()
-                    : 'Tokens',
-                style: Theme.of(context).textTheme.headlineSmall,
+                tokens.first is ValueToken
+                    ? 'Токены констант'
+                    : 'Индентификаторы',
+                style: Theme.of(context).textTheme.titleLarge,
               ),
               const SizedBox(height: 8),
               TextField(
                 controller: TextEditingController(text: map),
-                maxLines: 32,
+                maxLines: null,
               ),
             ],
           ),
@@ -184,4 +138,28 @@ class TokensTextField extends ConsumerWidget {
       ),
     );
   }
+}
+
+LexicalAnalyzerOutput? anOutput;
+final inputController = TextEditingController(text: kSample1JaveCode);
+final outputController = TextEditingController();
+late void Function(void Function()) lol;
+void f() {
+  final an = LexicalAnalyzer();
+
+  anOutput = an.execute(inputController.text);
+
+  String output = anOutput!.tokens
+      .map(
+        (e) => e == DividerTokens.whitespace
+            ? ""
+            : DividerTokens.isNewLine(e)
+                ? "\n"
+                : e.encode(),
+      )
+      .join(" ");
+
+  outputController.text = output;
+
+  lol(() {});
 }

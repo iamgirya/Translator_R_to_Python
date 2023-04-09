@@ -7,9 +7,9 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Translator from Java to C#',
+      title: 'Транслятор R-Python. Лабораторная работа №1',
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+        colorScheme: ColorScheme.fromSeed(seedColor: Colors.brown),
         useMaterial3: true,
         inputDecorationTheme: InputDecorationTheme(
           fillColor: Colors.blueGrey.shade50,
