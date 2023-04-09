@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../lexical_anallyzer/lexical_analyzer.dart';
-import '../lexical_anallyzer/models/lexical_analyzer_output.dart';
-import '../lexical_anallyzer/tokens/divider_tokens.dart';
+import '../core/providers.dart';
 import '../lexical_anallyzer/tokens/token.dart';
 import '../lexical_anallyzer/tokens/value_tokens.dart';
 
@@ -29,19 +27,19 @@ class _LexicalAnalyzerPage extends ConsumerStatefulWidget {
 class _LexicalAnalyzerPageState extends ConsumerState<_LexicalAnalyzerPage> {
   @override
   void initState() {
-    lol = setState;
     super.initState();
   }
 
   @override
   Widget build(BuildContext context) {
+    final anOutput = ref.watch(tokenOutputProveder);
     return SingleChildScrollView(
       padding: const EdgeInsets.symmetric(horizontal: 36, vertical: 24),
       scrollDirection: Axis.horizontal,
       child: Row(
         children: [
           Container(
-            padding: EdgeInsets.only(right: 16),
+            padding: const EdgeInsets.only(right: 16),
             width: 400,
             child: Flexible(
               child: Column(
@@ -53,7 +51,7 @@ class _LexicalAnalyzerPageState extends ConsumerState<_LexicalAnalyzerPage> {
                   ),
                   const SizedBox(height: 8),
                   TextField(
-                    controller: inputController,
+                    controller: ref.read(inputProvider),
                     maxLines: null,
                   ),
                 ],
@@ -73,7 +71,7 @@ class _LexicalAnalyzerPageState extends ConsumerState<_LexicalAnalyzerPage> {
                   (anOutput?.boolValues ?? []),
             ),
           Container(
-            padding: EdgeInsets.only(left: 16),
+            padding: const EdgeInsets.only(left: 16),
             width: 400,
             child: Flexible(
               child: Column(
@@ -85,7 +83,7 @@ class _LexicalAnalyzerPageState extends ConsumerState<_LexicalAnalyzerPage> {
                   ),
                   const SizedBox(height: 8),
                   TextField(
-                    controller: outputController,
+                    controller: ref.read(outputProvider),
                     maxLines: null,
                   ),
                 ],
@@ -138,28 +136,4 @@ class TokensTextField extends ConsumerWidget {
       ),
     );
   }
-}
-
-LexicalAnalyzerOutput? anOutput;
-final inputController = TextEditingController(text: kSample1JaveCode);
-final outputController = TextEditingController();
-late void Function(void Function()) lol;
-void f() {
-  final an = LexicalAnalyzer();
-
-  anOutput = an.execute(inputController.text);
-
-  String output = anOutput!.tokens
-      .map(
-        (e) => e == DividerTokens.whitespace
-            ? ""
-            : DividerTokens.isNewLine(e)
-                ? "\n"
-                : e.encode(),
-      )
-      .join(" ");
-
-  outputController.text = output;
-
-  lol(() {});
 }
