@@ -85,7 +85,7 @@ class _HomePageState extends ConsumerState<HomePage> {
             ),
             onPressed: () {
               setState(() {
-                generateTokens();
+                generateReversePolishEntry();
               });
             },
             child: Text(

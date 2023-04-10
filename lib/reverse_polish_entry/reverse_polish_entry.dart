@@ -1,4 +1,6 @@
 import '../lexical_anallyzer/models/lexical_analyzer_output.dart';
+import '../lexical_anallyzer/tokens/identiffier_token.dart';
+import '../lexical_anallyzer/tokens/token.dart';
 
 final class ReversePolishEntryOutput {
   final List<String> rezult;
@@ -65,8 +67,14 @@ class ReversePolishEntry {
   }
 
   ReversePolishEntryOutput execute(LexicalAnalyzerOutput input) {
-    List<String> identifiers = input.identifiers.map((e) => e.lexeme).toList();
-    List<String> t = input.tokens.map((e) => e.lexeme).toList();
+    List<String> identifiers =
+        input.identifiers.map((e) => e.value.toString()).toList();
+    List<String> t = input.tokens
+        .map(
+          (e) => e is ValToken ? e.value.toString() : e.lexeme,
+        )
+        .toList()
+      ..removeWhere((element) => element == ' ');
 
     List<String> stack = [], rezult = [];
     int aemCount = 1, procLevel = 1, operandCount = 1;
@@ -267,7 +275,7 @@ class ReversePolishEntry {
             rezult.add('КП ');
           }
           if (ifCount > 0 && RegExp(r'^if М\d+$').hasMatch(stack.last)) {
-            String tag = RegExp('М\d+').firstMatch(stack.last)!.input;
+            String tag = RegExp(r'М\d+').firstMatch(stack.last)!.group(0)!;
             int j = i + 1;
             while (j < t.length && t[j] == '\n') {
               j += 1;
@@ -280,7 +288,7 @@ class ReversePolishEntry {
           }
           if (whileCount > 0 &&
               RegExp(r'^while М\d+ М\d+$').hasMatch(stack.last)) {
-            final tag = RegExp('М\d+').allMatches(stack.last).toList();
+            final tag = RegExp(r'М\d+').allMatches(stack.last).toList();
             stack.removeLast();
             rezult.add('${tag[0]} БП ${tag[1]} ) { ');
             whileCount -= 1;
@@ -296,9 +304,9 @@ class ReversePolishEntry {
             rezult.add('КП ');
           } else if (isDescriptionVar) {
             //??
-            final tag = RegExp('\d+').allMatches(stack.last).toList();
-            procNum = int.parse(tag[0].input);
-            procLevel = int.parse(tag[1].input);
+            final tag = RegExp(r'\d+').allMatches(stack.last).toList();
+            procNum = int.parse(tag[0].group(0)!);
+            procLevel = int.parse(tag[1].group(0)!);
             stack.removeLast();
             rezult.add('$operandCount $procNum $procLevel КО ');
             isDescriptionVar = false;
@@ -310,8 +318,7 @@ class ReversePolishEntry {
               rezult.add('${stack.removeLast()} ');
             }
             if (ifCount > 0 && RegExp(r'^if М\d+$').hasMatch(stack.last)) {
-              //input ??
-              String tag = RegExp('М\d+').allMatches(stack.last).first.input;
+              String tag = RegExp(r'М\d+').firstMatch(stack.last)!.group(0)!;
               int j = i + 1;
               while (t[j] == '\n') {
                 j += 1;
@@ -324,9 +331,9 @@ class ReversePolishEntry {
             }
             if (whileCount > 0 &&
                 RegExp(r'^while М\d+ М\d+$').hasMatch(stack.last)) {
-              final tag = RegExp('М\d+').allMatches(stack.last);
-              String tag1 = tag.first.input;
-              String tag2 = tag.skip(1).first.input;
+              final tag = RegExp(r'М\d+').allMatches(stack.last);
+              String tag1 = tag.first.group(0)!;
+              String tag2 = tag.skip(1).first.group(0)!;
               rezult.add('$tag1 БП $tag2 ) { ');
               whileCount -= 1;
             }
@@ -341,14 +348,14 @@ class ReversePolishEntry {
           }
           stack.add(t[i]);
         }
-        i += 1;
       }
+      i += 1;
     }
 
     while (stack.isNotEmpty) {
       rezult.add('${stack.removeLast()} ');
     }
-    rezult[rezult.indexOf("System . out . println")] = "System.out.println";
+    //rezult[rezult.indexOf("System . out . println")] = "System.out.println";
     //rezult = re.sub(r'(\d) Ф', r'\1Ф', rezult);
 
     return ReversePolishEntryOutput(rezult: rezult);
