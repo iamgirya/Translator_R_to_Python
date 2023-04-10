@@ -19,7 +19,7 @@ enum SemanticProcedure {
 }
 
 String kSample1JaveCode = """
-a1 <- int(5)
+a1 <- int(5) + 2
 lenOfA1 = length(a1)
 b1 = "The Beatles\\n"
 print(b1)

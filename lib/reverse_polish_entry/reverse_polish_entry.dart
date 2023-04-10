@@ -23,7 +23,7 @@ class ReversePolishEntry {
     if (['(', 'for', 'if', 'while', '[', 'АЭМ', 'Ф', '{'].contains(token)) {
       return 0;
     }
-    if ([')', ',', ';', 'do', 'else', ']'].contains(token)) {
+    if ([')', ',', '\n', 'do', 'else', ']'].contains(token)) {
       return 1;
     }
     if (token == '=') {
@@ -38,7 +38,7 @@ class ReversePolishEntry {
     if (token == '!') {
       return 5;
     }
-    if (['<', '<=', '!=', '=', '>', '>='].contains(token)) {
+    if (['<', '<=', '!=', '=', '>', '>=', '<-'].contains(token)) {
       return 6;
     }
     if (['+', '-', '+=', '-=', '*=', '/='].contains(token)) {
@@ -53,12 +53,13 @@ class ReversePolishEntry {
       'procedure',
       'int',
       'double',
+      'length',
       'boolean',
       'String',
       'float',
       'args',
       'return',
-      'System.out.println',
+      'print',
       'main'
     ].contains(token)) {
       return 9;
@@ -74,7 +75,7 @@ class ReversePolishEntry {
           (e) => e is ValToken ? e.value.toString() : e.lexeme,
         )
         .toList()
-      ..removeWhere((element) => element == ' ');
+      ..removeWhere((element) => element == ' ' || element == '"');
 
     List<String> stack = [], rezult = [];
     int aemCount = 1, procLevel = 1, operandCount = 1;
@@ -107,33 +108,32 @@ class ReversePolishEntry {
           rezult.add('${stack.removeLast()} ');
           aemCount = 1;
         } else if (t[i] == '(') {
-          if (identifiers.contains(t[i - 1])) {
+          if (!identifiers.contains(t[i - 1]) && !isIf && !isWhile) {
             if (t[i + 1] != ')') {
               funcCount += 1;
+              stack.add('$funcCount Ф');
+            } else {
+              rezult.add('${stack.removeLast()} ');
+              i++;
             }
-            stack.add('$funcCount Ф');
-          } else {
-            stack.add(t[i]);
           }
           bracketCount += 1;
         } else if (t[i] == ')') {
-          while (
-              stack.last != '(' && !(RegExp(r'^\d+ Ф$').hasMatch(stack.last))) {
+          if (RegExp(r'^\d+ Ф$').hasMatch(stack.last)) {
+            funcCount--;
+            stack.removeLast();
             rezult.add('${stack.removeLast()} ');
           }
-          if (RegExp(r'^\d+ Ф$').hasMatch(stack.last)) {
-            stack.add('${funcCount + 1} Ф');
-            funcCount = 0;
-          }
-          stack.removeLast();
           bracketCount -= 1;
           if (bracketCount == 0) {
             if (isIf) {
-              while (stack.last != 'if') {
+              //костыль
+              while (stack.isNotEmpty && stack.last != 'if') {
                 rezult.add('${stack.removeLast()} ');
               }
+              stack.removeLast();
               tagCount += 1;
-              stack.last += ' М$tagCount';
+              stack.add('М$tagCount');
               rezult.add('М$tagCount УПЛ ');
               isIf = false;
             }
@@ -157,23 +157,19 @@ class ReversePolishEntry {
             aemCount += 1;
             stack.add('$aemCount АЭМ');
           }
-          if (RegExp(r'^\d+ Ф$').hasMatch(stack.last)) {
-            funcCount += 1;
-            stack.add('$funcCount Ф');
-          }
         } else if (t[i] == 'if') {
-          stack.add(t[i]);
+          stack.add('if');
           ifCount += 1;
           bracketCount = 0;
           isIf = true;
         } else if (t[i] == 'else') {
-          while (!(RegExp(r'^if М\d+$').hasMatch(stack.last))) {
+          while (!(RegExp(r'^М\d+$').hasMatch(stack.last))) {
             rezult.add('${stack.removeLast()} ');
           }
           stack.removeLast();
           tagCount += 1;
-          stack.add('if М$tagCount');
-          rezult.add('М$tagCount БП М${tagCount - 1} ) { ');
+          stack.add('М$tagCount');
+          rezult.add('М$tagCount БП М${tagCount - 1}: ');
         } else if (t[i] == 'while') {
           tagCount += 1;
           stack.add('${t[i]} М$tagCount');
@@ -274,16 +270,15 @@ class ReversePolishEntry {
             stack.removeLast();
             rezult.add('КП ');
           }
-          if (ifCount > 0 && RegExp(r'^if М\d+$').hasMatch(stack.last)) {
-            String tag = RegExp(r'М\d+').firstMatch(stack.last)!.group(0)!;
+          if (ifCount > 0 && RegExp(r'^М\d+$').hasMatch(stack.last)) {
             int j = i + 1;
             while (j < t.length && t[j] == '\n') {
               j += 1;
             }
             if (j >= t.length || t[j] != 'else') {
-              stack.removeLast();
-              rezult.add('$tag ) { ');
+              rezult.add('М$tagCount: ');
               ifCount -= 1;
+              stack.removeLast();
             }
           }
           if (whileCount > 0 &&
@@ -293,7 +288,7 @@ class ReversePolishEntry {
             rezult.add('${tag[0]} БП ${tag[1]} ) { ');
             whileCount -= 1;
           }
-        } else if (t[i] == ';') {
+        } else if (t[i] == '\n') {
           if (stack.isNotEmpty && RegExp(r'^PROC').hasMatch(stack.last)) {
             // toList ??
             final number = RegExp(r'\d+').allMatches(stack.last).toList();
@@ -312,22 +307,22 @@ class ReversePolishEntry {
             isDescriptionVar = false;
           } else if (ifCount > 0 || whileCount > 0) {
             while (!(stack.isNotEmpty && stack.last == '{') &&
-                !(ifCount > 0 && RegExp(r'^if М\d+$').hasMatch(stack.last)) &&
+                !(ifCount > 0 && RegExp(r'^М\d+$').hasMatch(stack.last)) &&
                 !(whileCount > 0 &&
                     RegExp(r'^while М\d+ М\d+$').hasMatch(stack.last))) {
               rezult.add('${stack.removeLast()} ');
             }
-            if (ifCount > 0 && RegExp(r'^if М\d+$').hasMatch(stack.last)) {
-              String tag = RegExp(r'М\d+').firstMatch(stack.last)!.group(0)!;
-              int j = i + 1;
-              while (t[j] == '\n') {
-                j += 1;
-              }
-              if (t[j] != 'else') {
-                stack.removeLast();
-              }
-              rezult.add('$tag ) { ');
-              ifCount -= 1;
+            if (ifCount > 0 && RegExp(r'^М\d+$').hasMatch(stack.last)) {
+              // String tag = RegExp(r'М\d+').firstMatch(stack.last)!.group(0)!;
+              // int j = i + 1;
+              // while (t[j] == '\n') {
+              //   j += 1;
+              // }
+              // if (t[j] != 'else') {
+              //   stack.removeLast();
+              // }
+              // rezult.add('$tag ) { ');
+              // ifCount -= 1;
             }
             if (whileCount > 0 &&
                 RegExp(r'^while М\d+ М\d+$').hasMatch(stack.last)) {
