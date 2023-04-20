@@ -23,7 +23,9 @@ enum StructType {
   ifThen,
   ifElse,
   whileCondition,
-  whileThen;
+  whileThen,
+  forCondition,
+  forThen;
 }
 
 extension Metods on StructType {
@@ -42,7 +44,7 @@ extension Metods on StructType {
   }
 
   void writeToRezult(List<String> rezult, int info, String stack) {
-    if (this == StructType.whileThen) {
+    if (this == StructType.forThen || this == StructType.whileThen) {
       rezult.add('${info - 1}M BP ${info}M:');
     } else if (info != -1) {
       rezult.add(info.toString() + stack);
@@ -79,7 +81,11 @@ extension Metods on StructType {
         return 'if';
       case StructType.whileCondition:
         return 'while';
+      case StructType.forCondition:
+        return 'for';
       case StructType.whileThen:
+        return '{';
+      case StructType.forThen:
         return '{';
       case StructType.ifElse:
         return 'else';
@@ -94,12 +100,14 @@ extension Metods on StructType {
       case StructType.F:
       case StructType.ifCondition:
       case StructType.whileCondition:
+      case StructType.forCondition:
         return ')';
       case StructType.AEM:
         return ']';
       case StructType.ifElse:
       case StructType.ifThen:
       case StructType.whileThen:
+      case StructType.forThen:
         return '}';
     }
   }

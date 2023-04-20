@@ -29,6 +29,9 @@ else {
 while (1 > 2) {
   print(3)
 }
+for (val in 1:9) {
+  print(val)
+}
 """;
 
 class LexicalAnalyzer {

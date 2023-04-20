@@ -28,7 +28,7 @@ class ReversePolishEntry {
     if ([')', ','].contains(token)) {
       return 1;
     }
-    if (['<-', '='].contains(token)) {
+    if (['<-', '=', 'in'].contains(token)) {
       return 2;
     }
     if (token == '||') {
@@ -49,7 +49,7 @@ class ReversePolishEntry {
     if (['*', '/', '%', '*=', '/='].contains(token)) {
       return 8;
     }
-    if (['**'].contains(token)) {
+    if (['**', ':'].contains(token)) {
       return 9;
     }
     if ([
@@ -72,8 +72,10 @@ class ReversePolishEntry {
   }
 
   ReversePolishEntryOutput execute(LexicalAnalyzerOutput input) {
-    List<String> identifiers =
-        input.identifiers.map((e) => e.value.toString()).toList();
+    List<String> identifiers = input.identifiers
+        .map((e) => e.value.toString())
+        .toList()
+      ..removeWhere((element) => element == 'in');
     List<String> t = input.tokens
         .map(
           (e) => e is ValToken ? e.value.toString() : e.lexeme,
@@ -159,6 +161,22 @@ class ReversePolishEntry {
             structStack.last.token == StructType.whileThen &&
             token == '{') {
           //whileThen start
+          stack.add(structStack.last.token.getName());
+          rezult.add('${markCount}M YPL');
+        } else if (token == 'for') {
+          //for start
+          stack.add('forCondition');
+          markCount++;
+          rezult.add('${markCount}M:');
+          markCount++;
+          structStack.add(InfoString(StructType.forThen, markCount));
+          structStack.add(InfoString(StructType.forCondition, -1));
+
+          i++;
+        } else if (structStack.isNotEmpty &&
+            structStack.last.token == StructType.forThen &&
+            token == '{') {
+          //forThen start
           stack.add(structStack.last.token.getName());
           rezult.add('${markCount}M YPL');
         } else if (token == '\n') {
