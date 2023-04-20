@@ -19,20 +19,9 @@ enum SemanticProcedure {
 }
 
 String kSample1JaveCode = """
-a1 <- int(5) + 2
-lenOfA1 = length(a1)
-b1 = "The Beatles\\n"
-print(b1)
-if (lenOfA1 > 6) 
-{
-	print(a1)
-}
-while (5 > 3) {
-  print(val)
-}
-for (val in 1:5) {
-  print(val)
-}
+3 + 2 * 6 * (7 + 8) - b[5,2]
+3 + 2 * 6 * (7 + 8) - b[5,1]
+3 + 2 * 6 * sum(4)
 """;
 
 class LexicalAnalyzer {

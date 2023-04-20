@@ -142,7 +142,7 @@ class Q10 extends State {
   @override
   call(str) {
     final div = DividerTokens.check(str);
-    if ([DividerTokens.slash, DividerTokens.star].contains(div)) {
+    if ([DividerTokens.slash].contains(div)) {
       return (Q11(), null);
     }
     return (F(), null);
@@ -153,9 +153,6 @@ class Q11 extends State {
   @override
   call(str) {
     final div = DividerTokens.check(str);
-    if (div == DividerTokens.star) {
-      return (Q12(), null);
-    }
     if (State._isLastSymbol) {
       return (Z(), null);
     }

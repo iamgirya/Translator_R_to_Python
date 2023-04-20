@@ -10,7 +10,6 @@ enum DividerTokens implements Token {
   colon(":"),
   semicolon(";"),
   slash("/"),
-  star("*"),
   quotes("\""),
   dot("."),
   startBracket("{"),

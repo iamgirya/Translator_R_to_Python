@@ -1,36 +1,6 @@
 import '../lexical_anallyzer/models/lexical_analyzer_output.dart';
-import '../lexical_anallyzer/tokens/identiffier_token.dart';
 import '../lexical_anallyzer/tokens/token.dart';
-
-final class ReversePolishEntryOutput {
-  final List<String> rezult;
-
-  // create consctructor
-  ReversePolishEntryOutput({
-    required this.rezult,
-  });
-
-  String convertToText() {
-    return rezult.fold(
-      '',
-      (previousValue, element) => '$previousValue $element',
-    );
-  }
-}
-
-enum StructType {
-  // ignore: constant_identifier_names
-  AEM,
-  F;
-}
-
-class InfoString {
-  StructType token;
-  int info;
-  int fakeEndCount = 0;
-
-  InfoString(this.token, this.info);
-}
+import 'polish_models.dart';
 
 class ReversePolishEntry {
   List<InfoString> structStack = [];
@@ -79,7 +49,7 @@ class ReversePolishEntry {
     if (['*', '/', '%', '*=', '/='].contains(token)) {
       return 8;
     }
-    if (['^'].contains(token)) {
+    if (['**'].contains(token)) {
       return 9;
     }
     if ([
@@ -115,27 +85,27 @@ class ReversePolishEntry {
     int i = 0;
 
     while (i < t.length) {
-      if (identifiers.contains(t[i])) {
+      if (identifiers.contains(t[i]) || (num.tryParse(t[i])) != null) {
         rezult.add(t[i]);
       } else {
         String token = t[i];
         int priotiry = _getPriority(token);
 
         if (i > 0 && identifiers.contains(t[i - 1]) && token == '[') {
-          //index work
+          //index start
           stack.add('AEM');
           structStack.add(InfoString(StructType.AEM, 2));
           indexCount++;
         } else if (structStack.isNotEmpty && token == ',') {
-          //index and func work
-          while (stack.last != structStack.last.token.toString()) {
+          //index and func add args
+          while (stack.last != structStack.last.token.getName()) {
             rezult.add(stack.removeLast());
           }
           structStack.last.info++;
         } else if (structStack.isNotEmpty &&
             structStack.last.token == StructType.AEM &&
             token == ']') {
-          //index work
+          //index end
           indexCount--;
           while (stack.last != 'AEM') {
             rezult.add(stack.removeLast());
@@ -144,7 +114,7 @@ class ReversePolishEntry {
           stack.removeLast();
           structStack.removeLast();
         } else if (i > 0 && identifiers.contains(t[i - 1]) && token == '(') {
-          //func work
+          //func start
           if (i + 1 < t.length && t[i + 1] == ')') {
             rezult.add('1F');
             i++;
@@ -155,9 +125,8 @@ class ReversePolishEntry {
           }
         } else if (structStack.isNotEmpty &&
             structStack.last.token == StructType.F &&
-            structStack.last.fakeEndCount == 0 &&
             token == ')') {
-          //func work
+          //func end
           funcCount--;
           while (stack.last != 'F') {
             rezult.add(stack.removeLast());
@@ -166,36 +135,40 @@ class ReversePolishEntry {
           stack.removeLast();
           structStack.removeLast();
         } else if (token == '(') {
-          //скобки
+          //bracket start
           stack.add('(');
-          if (structStack.isNotEmpty &&
-              structStack.last.token == StructType.F) {
-            structStack.last.fakeEndCount++;
-          }
-        } else if (token == ')') {
-          //скобки
+          bracketCount++;
+          structStack.add(InfoString(StructType.bracket, bracketCount));
+        } else if (structStack.isNotEmpty &&
+            structStack.last.token == StructType.bracket &&
+            token == ')') {
+          //bracket end
+          bracketCount--;
           while (stack.last != '(') {
             rezult.add(stack.removeLast());
           }
           stack.removeLast();
-          if (structStack.isNotEmpty &&
-              structStack.last.token == StructType.F) {
-            structStack.last.fakeEndCount--;
+        } else if (token == '\n') {
+          //новая строка
+          while (stack.isNotEmpty) {
+            rezult.add(stack.removeLast());
           }
+          rezult.add(token);
         } else {
           //priority
           if (stack.isEmpty) {
             stack.add(token);
-          } else if (_getPriority(stack.last) > priotiry) {
+          } else if (_getPriority(stack.last) < priotiry) {
             stack.add(token);
           } else {
-            while (_getPriority(stack.last) <= priotiry) {
+            while (stack.isNotEmpty && _getPriority(stack.last) >= priotiry) {
               rezult.add(stack.removeLast());
             }
             stack.add(token);
           }
         }
       }
+      i++;
     }
 
     /*

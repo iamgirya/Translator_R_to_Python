@@ -29,7 +29,8 @@ final class StateMachine {
   (State?, SemanticProcedure?) execute(int symbolIndex, bool isLastSymbol) {
     State._isLastSymbol = isLastSymbol;
     State._inputCode = inputCode;
-    var out = _currentState!(inputCode[symbolIndex]);
+    final symvol = inputCode[symbolIndex];
+    var out = _currentState!(symvol);
     _currentState = out.$1;
     return out;
   }
