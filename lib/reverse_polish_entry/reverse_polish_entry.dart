@@ -22,13 +22,13 @@ class ReversePolishEntry {
   bool isIf = false, isWhile = false, isDescriptionVar = false;
 
   int _getPriority(String token) {
-    if (['(', 'for', 'if', 'while', '[', 'AEM', 'F', '{'].contains(token)) {
+    if (['('].contains(token)) {
       return 0;
     }
-    if ([')', ',', '\n', 'do', 'else', ']'].contains(token)) {
+    if ([')', ','].contains(token)) {
       return 1;
     }
-    if (token == '=') {
+    if (['<-', '='].contains(token)) {
       return 2;
     }
     if (token == '||') {
@@ -40,7 +40,7 @@ class ReversePolishEntry {
     if (token == '!') {
       return 5;
     }
-    if (['<', '<=', '!=', '=', '>', '>=', '<-'].contains(token)) {
+    if (['<', '<=', '!=', '=', '>', '>='].contains(token)) {
       return 6;
     }
     if (['+', '-', '+=', '-=', '++', '--'].contains(token)) {
@@ -88,7 +88,6 @@ class ReversePolishEntry {
         rezult.add(t[i]);
       } else {
         String token = t[i];
-        int priotiry = _getPriority(token);
 
         if (structStack.isNotEmpty && token == ',') {
           //index and func add args
@@ -102,9 +101,8 @@ class ReversePolishEntry {
           while (stack.last != structStack.last.token.getName()) {
             rezult.add(stack.removeLast());
           }
-          if (structStack.last.info != -1) {
-            rezult.add(structStack.last.info.toString() + stack.last);
-          }
+          structStack.last.token
+              .writeToRezult(rezult, structStack.last.info, stack.last);
           stack.removeLast();
           structStack.removeLast();
         } else if (i > 0 && identifiers.contains(t[i - 1]) && token == '[') {
@@ -147,13 +145,30 @@ class ReversePolishEntry {
           rezult.insert(rezult.length - 1, '${markCount}M BP');
           structStack.add(InfoString(StructType.ifElse, markCount));
           i++;
+        } else if (token == 'while') {
+          //while start
+          stack.add('whileCondition');
+          markCount++;
+          rezult.add('${markCount}M:');
+          markCount++;
+          structStack.add(InfoString(StructType.whileThen, markCount));
+          structStack.add(InfoString(StructType.whileCondition, -1));
+
+          i++;
+        } else if (structStack.isNotEmpty &&
+            structStack.last.token == StructType.whileThen &&
+            token == '{') {
+          //whileThen start
+          stack.add(structStack.last.token.getName());
+          rezult.add('${markCount}M YPL');
         } else if (token == '\n') {
           //новая строка
-          while (stack.isNotEmpty && _getPriority(stack.last) > 2) {
+          while (stack.isNotEmpty && _getPriority(stack.last) > 1) {
             rezult.add(stack.removeLast());
           }
         } else {
           //priority
+          int priotiry = _getPriority(token);
           if (stack.isEmpty) {
             stack.add(token);
           } else if (_getPriority(stack.last) < priotiry) {

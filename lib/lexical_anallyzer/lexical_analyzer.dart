@@ -19,12 +19,15 @@ enum SemanticProcedure {
 }
 
 String kSample1JaveCode = """
-3 * sum(4) + 2 * 6 * (7 + 8) - b[5,2]
+int gasp = 3 * sum(4) + 2 * 6 * (7 + 8) - b[5,2]
 if (5 > 6) {
   print(1)
 } 
 else {
   print(2)
+}
+while (1 > 2) {
+  print(3)
 }
 """;
 
