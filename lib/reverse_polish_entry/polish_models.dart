@@ -14,6 +14,10 @@ final class ReversePolishEntryOutput {
   }
 }
 
+class Gs {
+  static const String AEM = 'fad';
+}
+
 enum StructType {
   // ignore: constant_identifier_names
   AEM,
@@ -26,6 +30,8 @@ enum StructType {
   whileThen,
   forCondition,
   forThen;
+
+  const StructType();
 }
 
 extension Metods on StructType {
@@ -36,61 +42,22 @@ extension Metods on StructType {
       case StructType.ifThen:
       case StructType.ifElse:
         return 'M:';
-      case StructType.whileThen:
-        return 'M:';
       default:
         return toString().split('.').last;
     }
   }
 
-  void writeToRezult(List<String> rezult, int info, String stack) {
-    if (this == StructType.forThen || this == StructType.whileThen) {
-      rezult.add('${info - 1}M BP ${info}M:');
-    } else if (info != -1) {
-      rezult.add(info.toString() + stack);
-    }
-  }
-
-  // String getMark() {
-  //   switch (this) {
-  //     case StructType.bracket:
-  //       return '(';
-  //     case StructType.F:
-  //       return 'F';
-  //     case StructType.AEM:
-  //       return 'AEM';
-  //     case StructType.ifCondition:
-  //       return 'if';
-  //     case StructType.whileCondition:
-  //       return 'if';
-  //     case StructType.ifElse:
-  //       return 'else';
-  //     case StructType.ifThen:
-  //       return '{';
-  //   }
-  // }
-
-  String getStartName() {
+  void writeToRezult(List<String> rezult, int info) {
     switch (this) {
-      case StructType.bracket:
-      case StructType.F:
-        return '(';
-      case StructType.AEM:
-        return '[';
-      case StructType.ifCondition:
-        return 'if';
-      case StructType.whileCondition:
-        return 'while';
-      case StructType.forCondition:
-        return 'for';
       case StructType.whileThen:
-        return '{';
       case StructType.forThen:
-        return '{';
-      case StructType.ifElse:
-        return 'else';
-      case StructType.ifThen:
-        return '{';
+        rezult.add('${info - 1}M BP ${info}M:');
+        return;
+      default:
+        if (info != -1) {
+          rezult.add(info.toString() + getName());
+        }
+        return;
     }
   }
 
@@ -116,6 +83,12 @@ extension Metods on StructType {
 class InfoString {
   StructType token;
   int info;
+
+  static String get mark => 'M';
+
+  void writeToRezult(List<String> rezult) {
+    token.writeToRezult(rezult, info);
+  }
 
   InfoString(this.token, this.info);
 }

@@ -36,6 +36,9 @@ class _HomePageState extends ConsumerState<HomePage> {
         .execute(ref.read(tokenOutputProvider))
         .convertToText();
 
+    ref.read(tokenOutputProvider).identifiers.clear();
+    ref.read(tokenOutputProvider).stringValues.clear();
+    ref.read(tokenOutputProvider).numberValues.clear();
     ref.read(outputProvider).text = output;
   }
 
