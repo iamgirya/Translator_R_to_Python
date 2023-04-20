@@ -18,15 +18,40 @@ enum StructType {
   // ignore: constant_identifier_names
   AEM,
   F,
-  bracket;
+  bracket,
+  ifCondition,
+  ifThen,
+  ifElse;
 }
 
-extension ParseToString on StructType {
+extension Metods on StructType {
   String getName() {
-    if (this == StructType.bracket) {
-      return '(';
+    switch (this) {
+      case StructType.bracket:
+        return '(';
+      case StructType.ifThen:
+      case StructType.ifElse:
+        return 'M:';
+      default:
+        return toString().split('.').last;
     }
-    return toString().split('.').last;
+  }
+
+  String getMark() {
+    switch (this) {
+      case StructType.bracket:
+        return '(';
+      case StructType.F:
+        return 'F';
+      case StructType.AEM:
+        return 'AEM';
+      case StructType.ifCondition:
+        return 'if';
+      case StructType.ifElse:
+        return 'else';
+      case StructType.ifThen:
+        return '{';
+    }
   }
 
   String getStartName() {
@@ -36,6 +61,12 @@ extension ParseToString on StructType {
         return '(';
       case StructType.AEM:
         return '[';
+      case StructType.ifCondition:
+        return 'if';
+      case StructType.ifElse:
+        return 'else';
+      case StructType.ifThen:
+        return '{';
     }
   }
 
@@ -43,9 +74,13 @@ extension ParseToString on StructType {
     switch (this) {
       case StructType.bracket:
       case StructType.F:
+      case StructType.ifCondition:
         return ')';
       case StructType.AEM:
         return ']';
+      case StructType.ifElse:
+      case StructType.ifThen:
+        return '}';
     }
   }
 }

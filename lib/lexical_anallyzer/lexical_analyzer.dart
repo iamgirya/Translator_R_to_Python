@@ -19,9 +19,13 @@ enum SemanticProcedure {
 }
 
 String kSample1JaveCode = """
-3 + 2 * 6 * (7 + 8) - b[5,2]
-3 + 2 * 6 * (7 + 8) - b[5,1]
-3 + 2 * 6 * sum(4)
+3 * sum(4) + 2 * 6 * (7 + 8) - b[5,2]
+if (5 > 6) {
+  print(1)
+} 
+else {
+  print(2)
+}
 """;
 
 class LexicalAnalyzer {

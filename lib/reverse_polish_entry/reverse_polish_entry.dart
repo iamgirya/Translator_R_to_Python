@@ -7,7 +7,7 @@ class ReversePolishEntry {
   List<String> stack = [];
   List<String> rezult = [];
   int funcCount = 0,
-      tagCount = 0,
+      markCount = 0,
       procNum = 0,
       ifCount = 0,
       whileCount = 0,
@@ -54,7 +54,6 @@ class ReversePolishEntry {
     }
     if ([
       '}',
-      'public.static.void',
       'procedure',
       'int',
       'double',
@@ -127,13 +126,32 @@ class ReversePolishEntry {
           //bracket start
           stack.add('(');
           bracketCount++;
-          structStack.add(InfoString(StructType.bracket, bracketCount));
+          structStack.add(InfoString(StructType.bracket, -1));
+        } else if (token == 'if') {
+          //if start
+          stack.add('ifCondition');
+          markCount++;
+          structStack.add(InfoString(StructType.ifThen, markCount));
+          structStack.add(InfoString(StructType.ifCondition, -1));
+          i++;
+        } else if (structStack.isNotEmpty &&
+            structStack.last.token == StructType.ifThen &&
+            token == '{') {
+          //then start
+          stack.add(structStack.last.token.getName());
+          rezult.add('${markCount}M YPL');
+        } else if (token == 'else') {
+          //else start
+          stack.add('M:');
+          markCount++;
+          rezult.insert(rezult.length - 1, '${markCount}M BP');
+          structStack.add(InfoString(StructType.ifElse, markCount));
+          i++;
         } else if (token == '\n') {
           //новая строка
-          while (stack.isNotEmpty) {
+          while (stack.isNotEmpty && _getPriority(stack.last) > 2) {
             rezult.add(stack.removeLast());
           }
-          rezult.add(token);
         } else {
           //priority
           if (stack.isEmpty) {
