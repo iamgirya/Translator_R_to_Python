@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../another_language_generator/another_language_generator.dart';
 import '../reverse_polish_entry/reverse_polish_entry.dart';
 import 'lexical_analyzer_page.dart';
 
@@ -26,19 +27,27 @@ class _HomePageState extends ConsumerState<HomePage> {
   }
 
   void generateReversePolishEntry() {
-    String inputText = ref.read(inputProvider).text;
+    generateTokens();
+    final polish = ref.read(polishProvider.notifier);
 
-    ref
-        .read(tokenOutputProvider.notifier)
-        .update((state) => LexicalAnalyzer().execute(inputText));
-
-    String output = ReversePolishEntry()
-        .execute(ref.read(tokenOutputProvider))
-        .convertToText();
+    polish.update(
+        (state) => ReversePolishEntry().execute(ref.read(tokenOutputProvider)));
+    String output = polish.state.convertToText();
 
     ref.read(tokenOutputProvider).identifiers.clear();
     ref.read(tokenOutputProvider).stringValues.clear();
     ref.read(tokenOutputProvider).numberValues.clear();
+    ref.read(outputProvider).text = output;
+  }
+
+  void generateLanguage() {
+    generateReversePolishEntry();
+    final anotherLanguage = ref.read(anotherLanguageProvider.notifier);
+
+    anotherLanguage.update((state) =>
+        AnotherLanguageGenerator().execute(ref.read(tokenOutputProvider)));
+    String output = anotherLanguage.state.convertToText();
+
     ref.read(outputProvider).text = output;
   }
 
@@ -49,7 +58,7 @@ class _HomePageState extends ConsumerState<HomePage> {
         backgroundColor: Theme.of(context).colorScheme.primary,
         title: Center(
           child: Text(
-            'Транслятор R-Python. Лабораторная работа №1',
+            'Транслятор R-Python',
             textAlign: TextAlign.center,
             style: TextStyle(
               color: Theme.of(context).colorScheme.onPrimary,
@@ -93,6 +102,25 @@ class _HomePageState extends ConsumerState<HomePage> {
             },
             child: Text(
               'Лаба 2',
+              style: TextStyle(color: Theme.of(context).colorScheme.onPrimary),
+            ),
+          ),
+          const SizedBox(
+            height: 15,
+          ),
+          ElevatedButton(
+            style: ButtonStyle(
+              backgroundColor: MaterialStateProperty.all<Color>(
+                Theme.of(context).colorScheme.primary,
+              ),
+            ),
+            onPressed: () {
+              setState(() {
+                generateLanguage();
+              });
+            },
+            child: Text(
+              'Лаба 3',
               style: TextStyle(color: Theme.of(context).colorScheme.onPrimary),
             ),
           ),

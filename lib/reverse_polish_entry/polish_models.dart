@@ -6,16 +6,14 @@ final class ReversePolishEntryOutput {
     required this.rezult,
   });
 
+  ReversePolishEntryOutput.empty() : rezult = [];
+
   String convertToText() {
     return rezult.fold(
       '',
       (previousValue, element) => '$previousValue $element',
     );
   }
-}
-
-class Gs {
-  static const String AEM = 'fad';
 }
 
 enum StructType {
