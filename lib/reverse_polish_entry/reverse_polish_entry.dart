@@ -83,6 +83,9 @@ class ReversePolishEntry {
         .toList()
       ..removeWhere((element) => element == ' ' || element == '"');
 
+    input.identifiers.clear();
+    input.stringValues.clear();
+    input.numberValues.clear();
     int i = 0;
 
     while (i < t.length) {
