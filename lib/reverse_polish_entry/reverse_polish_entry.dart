@@ -91,28 +91,28 @@ class ReversePolishEntry {
         String token = t[i];
         int priotiry = _getPriority(token);
 
-        if (i > 0 && identifiers.contains(t[i - 1]) && token == '[') {
-          //index start
-          stack.add('AEM');
-          structStack.add(InfoString(StructType.AEM, 2));
-          indexCount++;
-        } else if (structStack.isNotEmpty && token == ',') {
+        if (structStack.isNotEmpty && token == ',') {
           //index and func add args
           while (stack.last != structStack.last.token.getName()) {
             rezult.add(stack.removeLast());
           }
           structStack.last.info++;
         } else if (structStack.isNotEmpty &&
-            structStack.last.token == StructType.AEM &&
-            token == ']') {
-          //index end
-          indexCount--;
-          while (stack.last != 'AEM') {
+            token == structStack.last.token.getEndName()) {
+          //index, bracket and func end
+          while (stack.last != structStack.last.token.getName()) {
             rezult.add(stack.removeLast());
           }
-          rezult.add(structStack.last.info.toString() + stack.last);
+          if (structStack.last.info != -1) {
+            rezult.add(structStack.last.info.toString() + stack.last);
+          }
           stack.removeLast();
           structStack.removeLast();
+        } else if (i > 0 && identifiers.contains(t[i - 1]) && token == '[') {
+          //index start
+          stack.add('AEM');
+          structStack.add(InfoString(StructType.AEM, 2));
+          indexCount++;
         } else if (i > 0 && identifiers.contains(t[i - 1]) && token == '(') {
           //func start
           if (i + 1 < t.length && t[i + 1] == ')') {
@@ -123,31 +123,11 @@ class ReversePolishEntry {
             structStack.add(InfoString(StructType.F, 2));
             funcCount++;
           }
-        } else if (structStack.isNotEmpty &&
-            structStack.last.token == StructType.F &&
-            token == ')') {
-          //func end
-          funcCount--;
-          while (stack.last != 'F') {
-            rezult.add(stack.removeLast());
-          }
-          rezult.add(structStack.last.info.toString() + stack.last);
-          stack.removeLast();
-          structStack.removeLast();
         } else if (token == '(') {
           //bracket start
           stack.add('(');
           bracketCount++;
           structStack.add(InfoString(StructType.bracket, bracketCount));
-        } else if (structStack.isNotEmpty &&
-            structStack.last.token == StructType.bracket &&
-            token == ')') {
-          //bracket end
-          bracketCount--;
-          while (stack.last != '(') {
-            rezult.add(stack.removeLast());
-          }
-          stack.removeLast();
         } else if (token == '\n') {
           //новая строка
           while (stack.isNotEmpty) {

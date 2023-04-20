@@ -23,7 +23,30 @@ enum StructType {
 
 extension ParseToString on StructType {
   String getName() {
+    if (this == StructType.bracket) {
+      return '(';
+    }
     return toString().split('.').last;
+  }
+
+  String getStartName() {
+    switch (this) {
+      case StructType.bracket:
+      case StructType.F:
+        return '(';
+      case StructType.AEM:
+        return '[';
+    }
+  }
+
+  String getEndName() {
+    switch (this) {
+      case StructType.bracket:
+      case StructType.F:
+        return ')';
+      case StructType.AEM:
+        return ']';
+    }
   }
 }
 
