@@ -27,6 +27,12 @@ if (lenOfA1 > 6)
 {
 	print(a1)
 }
+while (5 > 3) {
+  print(val)
+}
+for (val in 1:5) {
+  print(val)
+}
 """;
 
 class LexicalAnalyzer {
