@@ -31,7 +31,7 @@ class AnotherLanguageGenerator {
   ];
   int subVars = 0;
   int tabLevel = 0;
-  List<InfoString> structStack = [];
+  List<String> forsMark = [];
 
   AnotherLanguageGeneratorOutput execute(
     ReversePolishEntryOutput polishInput,
@@ -44,7 +44,10 @@ class AnotherLanguageGenerator {
       ...lexicalInput.stringValues.map((e) => '"${e.value}"')
     ];
 
+    rezult.add('from goto import with_goto');
+
     for (int i = 0; i < polishInput.rezult.length; i++) {
+      int nowTabLevel = tabLevel;
       String token = polishInput.rezult[i];
       if (identifiers.contains(token) || constants.contains(token)) {
         stack.add(token);
@@ -94,10 +97,27 @@ class AnotherLanguageGenerator {
           rezult.add('goto .$token');
         } else if (RegExp(r'(\d+)M:').hasMatch(token)) {
           token = token.substring(0, token.length - 1);
-          rezult.add('label .$token');
+          if (forsMark.contains(token)) {
+            rezult.removeLast();
+            tabLevel--;
+            nowTabLevel--;
+          } else {
+            rezult.add('label .$token');
+          }
+        } else if (token == ':') {
+          String tmp = stack.removeLast();
+          stack.add('${stack.removeLast()}, $tmp');
+        } else if (token == 'in') {
+          String tmp = stack.removeLast();
+          rezult.removeLast();
+          rezult.add('for ${stack.removeLast()} in range($tmp):');
+          i++;
+          String endMark = polishInput.rezult[i].substring(0, 2);
+          forsMark.add(endMark);
+          tabLevel++;
         }
 
-        for (int i = 0; i < tabLevel; i++) {
+        for (int i = 0; i < nowTabLevel; i++) {
           rezult[rezult.length - 1] = '\t${rezult[rezult.length - 1]}';
         }
       }

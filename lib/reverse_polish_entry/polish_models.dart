@@ -49,7 +49,8 @@ extension Metods on StructType {
     switch (this) {
       case StructType.whileThen:
       case StructType.forThen:
-        rezult.add('${info - 1}M BP ${info}M:');
+        rezult.add('${info - 1}M BP');
+        rezult.add('${info}M:');
         return;
       default:
         if (info != -1) {
