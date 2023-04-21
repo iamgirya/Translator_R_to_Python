@@ -11,7 +11,7 @@ final class AnotherLanguageGeneratorOutput {
   String convertToText() {
     return rezult.fold(
       '',
-      (previousValue, element) => '$previousValue $element',
+      (previousValue, element) => '$previousValue\n$element',
     );
   }
 }

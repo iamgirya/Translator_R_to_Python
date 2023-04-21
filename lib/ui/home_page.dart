@@ -21,6 +21,10 @@ class _HomePageState extends ConsumerState<HomePage> {
     final tokenOutput = ref.read(tokenOutputProvider.notifier);
 
     tokenOutput.update((state) => LexicalAnalyzer().execute(inputText));
+    tokenOutput.update((state) {
+      state.identifiers.removeWhere((element) => element.value == 'in');
+      return state;
+    });
     String output = tokenOutput.state.convertToText();
 
     ref.read(outputProvider).text = output;
@@ -34,9 +38,6 @@ class _HomePageState extends ConsumerState<HomePage> {
         (state) => ReversePolishEntry().execute(ref.read(tokenOutputProvider)));
     String output = polish.state.convertToText();
 
-    ref.read(tokenOutputProvider).identifiers.clear();
-    ref.read(tokenOutputProvider).stringValues.clear();
-    ref.read(tokenOutputProvider).numberValues.clear();
     ref.read(outputProvider).text = output;
   }
 
@@ -44,8 +45,8 @@ class _HomePageState extends ConsumerState<HomePage> {
     generateReversePolishEntry();
     final anotherLanguage = ref.read(anotherLanguageProvider.notifier);
 
-    anotherLanguage.update((state) =>
-        AnotherLanguageGenerator().execute(ref.read(tokenOutputProvider)));
+    anotherLanguage.update((state) => AnotherLanguageGenerator()
+        .execute(ref.read(polishProvider), ref.read(tokenOutputProvider)));
     String output = anotherLanguage.state.convertToText();
 
     ref.read(outputProvider).text = output;

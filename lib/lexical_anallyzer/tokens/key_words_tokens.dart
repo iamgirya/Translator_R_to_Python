@@ -28,7 +28,6 @@ enum KeyWordTokens implements Token {
   protected__("protected"),
   struct_("struct"),
   length_("length"),
-  print_("print"),
   unsigned_("unsigned"),
   catch_("catch"),
   double_("double"),

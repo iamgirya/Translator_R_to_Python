@@ -63,7 +63,6 @@ class ReversePolishEntry {
       'float',
       'args',
       'return',
-      'print',
       'main'
     ].contains(token)) {
       return 10;
@@ -72,21 +71,32 @@ class ReversePolishEntry {
   }
 
   ReversePolishEntryOutput execute(LexicalAnalyzerOutput input) {
-    List<String> identifiers = input.identifiers
-        .map((e) => e.value.toString())
-        .toList()
-      ..removeWhere((element) => element == 'in');
+    List<String> identifiers =
+        input.identifiers.map((e) => e.value.toString()).toList()
+          ..addAll(input.numberValues.map((e) => e.value.toString()))
+          ..addAll(input.stringValues.map((e) => '"${e.value}"'));
     List<String> t = input.tokens
         .map(
           (e) => e is ValToken ? e.value.toString() : e.lexeme,
         )
         .toList()
-      ..removeWhere((element) => element == ' ' || element == '"');
+      ..removeWhere((element) => element == ' ');
+
+    for (int i = 0; i < t.length; i++) {
+      if (i - 1 >= 0 &&
+          i + 1 < t.length &&
+          t[i - 1] == '"' &&
+          t[i + 1] == '"') {
+        t[i] = '"${t[i]}"';
+        t.removeAt(i - 1);
+        t.removeAt(i);
+      }
+    }
 
     for (int i = 0; i < t.length; i++) {
       String token = t[i];
 
-      if (identifiers.contains(token) || (num.tryParse(token)) != null) {
+      if (identifiers.contains(token)) {
         rezult.add(token);
       } else if (structStack.isNotEmpty &&
           [StructType.AEM, StructType.F].contains(structStack.last.token) &&
