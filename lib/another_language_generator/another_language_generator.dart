@@ -55,15 +55,15 @@ class AnotherLanguageGenerator {
         if (binary.contains(token)) {
           subVars++;
           String tmp = stack.removeLast();
-          rezult.add('V$subVars=${stack.removeLast()}$token$tmp');
+          rezult.add('V$subVars = ${stack.removeLast()} $token $tmp');
           stack.add('V$subVars');
         } else if (unary.contains(token)) {
           subVars++;
-          rezult.add('V$subVars=$token${stack.removeLast()}');
+          rezult.add('V$subVars = $token ${stack.removeLast()}');
           stack.add('V$subVars');
         } else if (['=', '<-'].contains(token)) {
           String tmp = stack.removeLast();
-          rezult.add('${stack.removeLast()}=$tmp');
+          rezult.add('${stack.removeLast()} = $tmp');
         } else if (RegExp(r'(\d+)F').hasMatch(token)) {
           //fun
           token = token.substring(0, token.length - 1);
@@ -74,7 +74,7 @@ class AnotherLanguageGenerator {
           rez = '${stack.removeLast()}(${rez.substring(2)}';
 
           subVars++;
-          rezult.add('V$subVars=$rez');
+          rezult.add('V$subVars = $rez');
           stack.add('V$subVars');
         } else if (RegExp(r'(\d+)AEM').hasMatch(token)) {
           //index
@@ -86,7 +86,7 @@ class AnotherLanguageGenerator {
           rez = '${stack.removeLast()}[${rez.substring(2)}';
 
           subVars++;
-          rezult.add('V$subVars=$rez');
+          rezult.add('V$subVars = $rez');
           stack.add('V$subVars');
         } else if (RegExp(r'(\d+)M YPL').hasMatch(token)) {
           token = token.substring(0, token.length - 4);

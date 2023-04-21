@@ -54,29 +54,24 @@ class _HomePageState extends ConsumerState<HomePage> {
   }
 
   Future<void> makeSyntAnalysis() async {
-    generateLanguage();
-    final anotherLanguage = ref.read(anotherLanguageProvider.notifier);
+    final analysis = SyntaxisAnalyzer().execute(ref.read(outputProvider).text);
 
-    final analysis = SyntaxisAnalyzer().execute(anotherLanguage.state);
-
-    if (analysis.isOk) {
-      showDialog(
-        context: context,
-        builder: (context) => AlertDialog(
-          title:
-              Text(analysis.isOk ? 'Отличный синтаксис!' : analysis.errorName!),
-          content: Text(analysis.message),
-          actions: <Widget>[
-            TextButton(
-              onPressed: () {
-                Navigator.of(context, rootNavigator: true).pop();
-              },
-              child: Text(analysis.isOk ? 'Ок' : 'Сейчас исправлю'),
-            ),
-          ],
-        ),
-      );
-    }
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title:
+            Text(analysis.isOk ? 'Отличный синтаксис!' : analysis.errorName!),
+        content: Text(analysis.message),
+        actions: <Widget>[
+          TextButton(
+            onPressed: () {
+              Navigator.of(context, rootNavigator: true).pop();
+            },
+            child: Text(analysis.isOk ? 'Ок' : 'Сейчас исправлю'),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
