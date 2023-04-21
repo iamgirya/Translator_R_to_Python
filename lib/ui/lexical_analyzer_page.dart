@@ -37,6 +37,7 @@ class _LexicalAnalyzerPageState extends ConsumerState<_LexicalAnalyzerPage> {
       padding: const EdgeInsets.symmetric(horizontal: 36, vertical: 24),
       scrollDirection: Axis.horizontal,
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
             padding: const EdgeInsets.only(right: 16),
@@ -73,7 +74,7 @@ class _LexicalAnalyzerPageState extends ConsumerState<_LexicalAnalyzerPage> {
           Container(
             padding: const EdgeInsets.only(left: 16),
             width: 400,
-            child: Flexible(
+            child: SingleChildScrollView(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [

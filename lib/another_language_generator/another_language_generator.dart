@@ -30,6 +30,8 @@ class AnotherLanguageGenerator {
     '!',
   ];
   int subVars = 0;
+  int tabLevel = 0;
+  List<InfoString> structStack = [];
 
   AnotherLanguageGeneratorOutput execute(
     ReversePolishEntryOutput polishInput,
@@ -60,6 +62,7 @@ class AnotherLanguageGenerator {
           String tmp = stack.removeLast();
           rezult.add('${stack.removeLast()}=$tmp');
         } else if (RegExp(r'(\d+)F').hasMatch(token)) {
+          //fun
           token = token.substring(0, token.length - 1);
           String rez = ')';
           for (int i = int.parse(token) - 1; i > 0; i--) {
@@ -71,6 +74,7 @@ class AnotherLanguageGenerator {
           rezult.add('V$subVars=$rez');
           stack.add('V$subVars');
         } else if (RegExp(r'(\d+)AEM').hasMatch(token)) {
+          //index
           token = token.substring(0, token.length - 3);
           String rez = ']';
           for (int i = int.parse(token) - 1; i > 0; i--) {
@@ -81,6 +85,20 @@ class AnotherLanguageGenerator {
           subVars++;
           rezult.add('V$subVars=$rez');
           stack.add('V$subVars');
+        } else if (RegExp(r'(\d+)M YPL').hasMatch(token)) {
+          token = token.substring(0, token.length - 4);
+          rezult.add('if not ${stack.removeLast()} :');
+          rezult.add('\tgoto .$token');
+        } else if (RegExp(r'(\d+)M BP').hasMatch(token)) {
+          token = token.substring(0, token.length - 3);
+          rezult.add('goto .$token');
+        } else if (RegExp(r'(\d+)M:').hasMatch(token)) {
+          token = token.substring(0, token.length - 1);
+          rezult.add('label .$token');
+        }
+
+        for (int i = 0; i < tabLevel; i++) {
+          rezult[rezult.length - 1] = '\t${rezult[rezult.length - 1]}';
         }
       }
     }
