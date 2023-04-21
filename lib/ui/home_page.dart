@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../another_language_generator/another_language_generator.dart';
 import '../reverse_polish_entry/reverse_polish_entry.dart';
+import '../syntaxis_analyzer/syntaxis_analyzer.dart';
 import 'lexical_analyzer_page.dart';
 
 import '../core/providers.dart';
@@ -50,6 +51,32 @@ class _HomePageState extends ConsumerState<HomePage> {
     String output = anotherLanguage.state.convertToText();
 
     ref.read(outputProvider).text = output;
+  }
+
+  Future<void> makeSyntAnalysis() async {
+    generateLanguage();
+    final anotherLanguage = ref.read(anotherLanguageProvider.notifier);
+
+    final analysis = SyntaxisAnalyzer().execute(anotherLanguage.state);
+
+    if (analysis.isOk) {
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title:
+              Text(analysis.isOk ? 'Отличный синтаксис!' : analysis.errorName!),
+          content: Text(analysis.message),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () {
+                Navigator.of(context, rootNavigator: true).pop();
+              },
+              child: Text(analysis.isOk ? 'Ок' : 'Сейчас исправлю'),
+            ),
+          ],
+        ),
+      );
+    }
   }
 
   @override
@@ -122,6 +149,25 @@ class _HomePageState extends ConsumerState<HomePage> {
             },
             child: Text(
               'Лаба 3',
+              style: TextStyle(color: Theme.of(context).colorScheme.onPrimary),
+            ),
+          ),
+          const SizedBox(
+            height: 15,
+          ),
+          ElevatedButton(
+            style: ButtonStyle(
+              backgroundColor: MaterialStateProperty.all<Color>(
+                Theme.of(context).colorScheme.primary,
+              ),
+            ),
+            onPressed: () {
+              setState(() {
+                makeSyntAnalysis();
+              });
+            },
+            child: Text(
+              'Лаба 4',
               style: TextStyle(color: Theme.of(context).colorScheme.onPrimary),
             ),
           ),
