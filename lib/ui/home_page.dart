@@ -55,12 +55,13 @@ class _HomePageState extends ConsumerState<HomePage> {
     );
 
     costilAddVars = generator.subVars;
+    anotherLanguage.state.generateTokens();
     String output = anotherLanguage.state.convertToText();
 
     ref.read(outputProvider).text = output;
   }
 
-  Future<void> makeSyntAnalysis() async {
+  void makeSyntAnalysis() {
     final analysis = SyntaxisAnalyzer().execute(ref.read(outputProvider).text,
         ref.read(tokenOutputProvider), costilAddVars);
 
@@ -70,7 +71,7 @@ class _HomePageState extends ConsumerState<HomePage> {
         title:
             Text(analysis.isOk ? 'Отличный синтаксис!' : analysis.errorName!),
         content: Text(analysis.message),
-        actions: <Widget>[
+        actions: [
           TextButton(
             onPressed: () {
               Navigator.of(context, rootNavigator: true).pop();

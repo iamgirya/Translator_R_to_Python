@@ -1,4 +1,5 @@
 import '../lexical_anallyzer/models/lexical_analyzer_output.dart';
+import 'error_models.dart';
 import 'syntaxis_analyzers_models.dart';
 
 class SyntaxisAnalyzer {
@@ -6,18 +7,28 @@ class SyntaxisAnalyzer {
   List<String> identifiers = [];
   List<String> gotoMarks = [];
   List<String> labelMarks = [];
+  List<bool> isVarDeclared = [];
+  List<bool> needToDeclare = [];
   String nextSymbol = '';
   int i = 0;
   bool tabLevel = false;
 
-  void get scan => nextSymbol = token[i++];
+  void get scan {
+    nextSymbol = token[i++];
+    AnalyzerErrorsHolder.tokenCount++;
+  }
 
   bool _isIdentifier(String token) {
-    return identifiers.contains(token);
+    final isInd = identifiers.contains(token);
+    if (isInd) {
+      needToDeclare[identifiers.indexOf(token)] = true;
+    }
+    return isInd;
   }
 
   bool _isIdentifierOrConst(String token) {
-    return identifiers.contains(token) ||
+    return (identifiers.contains(token) &&
+            isVarDeclared[identifiers.indexOf(token)]) ||
         num.tryParse(token) != null ||
         (token[0] == '"' && token[token.length - 1] == '"');
   }
@@ -99,18 +110,16 @@ class SyntaxisAnalyzer {
     token.add('');
   }
 
-  SyntaxisAnalyzerOutput get errorCommon => SyntaxisAnalyzerOutput(
-        isOk: false,
-        message: 'Индекс ошибки: $i',
-        errorName: 'Неправильная запись выражения',
-      );
-
   SyntaxisAnalyzerOutput? _term() {
     bool isNeedNext = true;
     while (isNeedNext) {
       isNeedNext = false;
       if (!_isIdentifierOrConst(nextSymbol)) {
-        return errorCommon;
+        if (identifiers.contains(nextSymbol) &&
+            !isVarDeclared[identifiers.indexOf(nextSymbol)]) {
+          return AnalyzerErrorsHolder.errorNotDeclare;
+        }
+        return AnalyzerErrorsHolder.errorCommon;
       }
       scan;
 
@@ -141,11 +150,15 @@ class SyntaxisAnalyzer {
     while (nextSymbol != ')') {
       if (needIdentificator) {
         if (!_isIdentifierOrConst(nextSymbol)) {
-          return errorCommon;
+          if (identifiers.contains(nextSymbol) &&
+              !isVarDeclared[identifiers.indexOf(nextSymbol)]) {
+            return AnalyzerErrorsHolder.errorNotDeclare;
+          }
+          return AnalyzerErrorsHolder.errorCommon;
         }
       } else {
         if (nextSymbol != ',') {
-          return errorCommon;
+          return AnalyzerErrorsHolder.errorCommon;
         }
       }
       scan;
@@ -160,11 +173,15 @@ class SyntaxisAnalyzer {
     while (nextSymbol != ']') {
       if (needIdentificator) {
         if (!_isIdentifierOrConst(nextSymbol)) {
-          return errorCommon;
+          if (identifiers.contains(nextSymbol) &&
+              !isVarDeclared[identifiers.indexOf(nextSymbol)]) {
+            return AnalyzerErrorsHolder.errorNotDeclare;
+          }
+          return AnalyzerErrorsHolder.errorCommon;
         }
       } else {
         if (nextSymbol != ',') {
-          return errorCommon;
+          return AnalyzerErrorsHolder.errorCommon;
         }
       }
       scan;
@@ -174,9 +191,9 @@ class SyntaxisAnalyzer {
     return null;
   }
 
-  SyntaxisAnalyzerOutput? _StartOfTerm() {
+  SyntaxisAnalyzerOutput? _startOfTerm() {
     if (!_isIdentifier(nextSymbol)) {
-      return errorCommon;
+      return AnalyzerErrorsHolder.errorCommon;
     }
     scan;
 
@@ -190,7 +207,7 @@ class SyntaxisAnalyzer {
       scan;
       return _array();
     } else if (nextSymbol != '\n' && nextSymbol != ':') {
-      return errorCommon;
+      return AnalyzerErrorsHolder.errorCommon;
     }
     return null;
   }
@@ -200,6 +217,8 @@ class SyntaxisAnalyzer {
     LexicalAnalyzerOutput lexicalInput,
     int costilAddVars,
   ) {
+    AnalyzerErrorsHolder.lineCount = 1;
+    AnalyzerErrorsHolder.tokenCount = 0;
     token = input.split(' ');
 
     parseTextToToken();
@@ -207,61 +226,46 @@ class SyntaxisAnalyzer {
     identifiers =
         lexicalInput.identifiers.map((e) => e.value.toString()).toList();
 
-    for (int i = 1; i <= costilAddVars; i++) {
-      identifiers.add('V$i');
+    for (int i = 0; i < identifiers.length; i++) {
+      if (identifiers[i] == 'sum' ||
+          identifiers[i] == 'print' ||
+          identifiers[i] == 'b') {
+        isVarDeclared.add(true);
+        needToDeclare.add(true);
+      } else {
+        isVarDeclared.add(false);
+        needToDeclare.add(false);
+      }
     }
 
-    final errorOfStart = SyntaxisAnalyzerOutput(
-        isOk: false, message: '', errorName: 'Не подключена библиотека goto');
-    final errorLostMark = SyntaxisAnalyzerOutput(
-        isOk: false,
-        message: 'Индекс лексемы ожидающей маркер: ',
-        errorName: 'Ожидался маркер');
-    final errorNumberMark = SyntaxisAnalyzerOutput(
-        isOk: false,
-        message: 'Индекс повтора: ',
-        errorName: 'Встречен повторяющийся маркер');
-    final errorNotPairedMark = SyntaxisAnalyzerOutput(
-        isOk: false,
-        message: '',
-        errorName: 'Не для каждого goto есть пара label');
-    final errorNotEndIf = SyntaxisAnalyzerOutput(
-        isOk: false,
-        message: 'Индекс ошибки: ',
-        errorName: 'Ожидалось встретить ":"');
-    final errorTabLevel = SyntaxisAnalyzerOutput(
-        isOk: false,
-        message: 'Индекс ошибки: ',
-        errorName: 'Ожидалась табуляция');
-    final errorNotIdentificator = SyntaxisAnalyzerOutput(
-        isOk: false,
-        message: 'Индекс ошибки: ',
-        errorName: 'Ожидался идентификатор');
-    final errorWrongFor = SyntaxisAnalyzerOutput(
-        isOk: false,
-        message: 'Индекс ошибки: ',
-        errorName: 'Ошибка в записи for');
+    for (int i = 1; i <= costilAddVars; i++) {
+      identifiers.add('V$i');
+      isVarDeclared.add(false);
+      needToDeclare.add(false);
+    }
 
     scan;
     if (nextSymbol != 'from') {
-      return errorOfStart;
+      return AnalyzerErrorsHolder.errorOfStart;
     }
     scan;
     if (nextSymbol != 'goto') {
-      return errorOfStart;
+      return AnalyzerErrorsHolder.errorOfStart;
     }
     scan;
     if (nextSymbol != 'import') {
-      return errorOfStart;
+      return AnalyzerErrorsHolder.errorOfStart;
     }
     scan;
     if (nextSymbol != 'with_goto') {
-      return errorOfStart;
+      return AnalyzerErrorsHolder.errorOfStart;
     }
     scan;
 
     while (i < token.length) {
       while (nextSymbol == '\n') {
+        AnalyzerErrorsHolder.lineCount++;
+        AnalyzerErrorsHolder.tokenCount = 0;
         scan;
       }
       if (tabLevel) {
@@ -269,8 +273,7 @@ class SyntaxisAnalyzer {
           nextSymbol = nextSymbol.substring(1);
           tabLevel = false;
         } else {
-          errorTabLevel.message += i.toString();
-          return errorTabLevel;
+          return AnalyzerErrorsHolder.errorTabLevel;
         }
       }
       if (nextSymbol == 'goto') {
@@ -278,64 +281,55 @@ class SyntaxisAnalyzer {
         if (RegExp(r'\.(\d+)M').hasMatch(nextSymbol)) {
           String tmp = nextSymbol.substring(1, nextSymbol.length - 1);
           if (gotoMarks.contains(tmp)) {
-            errorNumberMark.message = errorNumberMark.message + (i).toString();
-            return errorNumberMark;
+            return AnalyzerErrorsHolder.errorNumberMark;
           }
           gotoMarks.add(tmp);
           scan;
         } else {
-          errorLostMark.message = errorLostMark.message + (i - 1).toString();
-          return errorLostMark;
+          return AnalyzerErrorsHolder.errorLostMark;
         }
       } else if (nextSymbol == 'label') {
         scan;
         if (RegExp(r'\.(\d+)M').hasMatch(nextSymbol)) {
           String tmp = nextSymbol.substring(1, nextSymbol.length - 1);
           if (labelMarks.contains(tmp)) {
-            errorNumberMark.message = errorNumberMark.message + (i).toString();
-            return errorNumberMark;
+            return AnalyzerErrorsHolder.errorNumberMark;
           }
           labelMarks.add(tmp);
           scan;
         } else {
-          errorLostMark.message = errorLostMark.message + (i - 1).toString();
-          return errorLostMark;
+          return AnalyzerErrorsHolder.errorLostMark;
         }
       } else if (nextSymbol == 'if') {
         scan;
         if (nextSymbol == 'not') {
           scan;
         }
-        final extension = _StartOfTerm();
+        final extension = _startOfTerm();
         if (extension != null) {
           return extension;
         }
         if (nextSymbol != ':') {
-          errorNotEndIf.message = errorNotEndIf.message + (i).toString();
-          return errorNotEndIf;
+          return AnalyzerErrorsHolder.errorNotEndIf;
         }
         tabLevel = true;
         scan;
       } else if (nextSymbol == 'for') {
         scan;
         if (!_isIdentifier(nextSymbol)) {
-          errorNotIdentificator.message += i.toString();
-          return errorNotIdentificator;
+          return AnalyzerErrorsHolder.errorNotIdentificator;
         }
         scan;
         if (nextSymbol != 'in') {
-          errorWrongFor.message += i.toString();
-          return errorWrongFor;
+          return AnalyzerErrorsHolder.errorWrongFor;
         }
         scan;
         if (!RegExp(r'range').hasMatch(nextSymbol)) {
-          errorWrongFor.message += i.toString();
-          return errorWrongFor;
+          return AnalyzerErrorsHolder.errorWrongFor;
         }
         scan;
         if (nextSymbol != '(') {
-          errorWrongFor.message += i.toString();
-          return errorWrongFor;
+          return AnalyzerErrorsHolder.errorWrongFor;
         } else {
           scan;
           final rezult = _func();
@@ -345,16 +339,22 @@ class SyntaxisAnalyzer {
         }
 
         if (nextSymbol != ':') {
-          errorWrongFor.message += i.toString();
-          return errorWrongFor;
+          return AnalyzerErrorsHolder.errorWrongFor;
         }
         scan;
 
         tabLevel = true;
       } else if (_isIdentifier(nextSymbol)) {
-        _StartOfTerm();
+        final rezult = _startOfTerm();
+        if (rezult != null) {
+          return rezult;
+        }
       } else {
-        return errorCommon;
+        return AnalyzerErrorsHolder.errorCommon;
+      }
+
+      for (int i = 0; i < needToDeclare.length; i++) {
+        isVarDeclared[i] = needToDeclare[i];
       }
     }
 
@@ -364,7 +364,7 @@ class SyntaxisAnalyzer {
           (previousValue, element) =>
               previousValue && (gotoMarks.contains(element)),
         ))) {
-      return errorNotPairedMark;
+      return AnalyzerErrorsHolder.errorNotPairedMark;
     }
 
     return SyntaxisAnalyzerOutput(isOk: true, message: '');
