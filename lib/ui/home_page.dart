@@ -17,6 +17,8 @@ class HomePage extends ConsumerStatefulWidget {
 }
 
 class _HomePageState extends ConsumerState<HomePage> {
+  int costilAddVars = 0;
+
   void generateTokens() {
     String inputText = ref.read(inputProvider).text;
     final tokenOutput = ref.read(tokenOutputProvider.notifier);
@@ -45,16 +47,22 @@ class _HomePageState extends ConsumerState<HomePage> {
   void generateLanguage() {
     generateReversePolishEntry();
     final anotherLanguage = ref.read(anotherLanguageProvider.notifier);
+    final generator = AnotherLanguageGenerator();
 
-    anotherLanguage.update((state) => AnotherLanguageGenerator()
-        .execute(ref.read(polishProvider), ref.read(tokenOutputProvider)));
+    anotherLanguage.update(
+      (state) => generator.execute(
+          ref.read(polishProvider), ref.read(tokenOutputProvider)),
+    );
+
+    costilAddVars = generator.subVars;
     String output = anotherLanguage.state.convertToText();
 
     ref.read(outputProvider).text = output;
   }
 
   Future<void> makeSyntAnalysis() async {
-    final analysis = SyntaxisAnalyzer().execute(ref.read(outputProvider).text);
+    final analysis = SyntaxisAnalyzer().execute(ref.read(outputProvider).text,
+        ref.read(tokenOutputProvider), costilAddVars);
 
     showDialog(
       context: context,

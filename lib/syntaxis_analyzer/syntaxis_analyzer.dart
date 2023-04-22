@@ -1,3 +1,4 @@
+import '../lexical_anallyzer/models/lexical_analyzer_output.dart';
 import 'syntaxis_analyzers_models.dart';
 
 class SyntaxisAnalyzer {
@@ -12,12 +13,34 @@ class SyntaxisAnalyzer {
   void get scan => nextSymbol = token[i++];
 
   bool _isIdentifier(String token) {
-    //
-    return true;
+    return identifiers.contains(token);
   }
 
-  SyntaxisAnalyzerOutput execute(String input) {
-    token = input.split(' ');
+  bool _isIdentifierOrConst(String token) {
+    return identifiers.contains(token) ||
+        num.tryParse(token) != null ||
+        (token[0] == '"' && token[token.length - 1] == '"');
+  }
+
+  bool _isOperator(String token) {
+    return [
+      '<',
+      '<=',
+      '!=',
+      '>',
+      '>=',
+      '+',
+      '-',
+      '*',
+      '/',
+      '%',
+      '**',
+      '&&',
+      '||'
+    ].contains(token);
+  }
+
+  void parseTextToToken() {
     for (int i = 0; i < token.length; i++) {
       if (token[i].contains('\n')) {
         List<String> tmp = token[i].replaceFirst('\n', ' ').split(' ');
@@ -27,6 +50,167 @@ class SyntaxisAnalyzer {
         i += 2;
       }
     }
+    for (int i = 0; i < token.length; i++) {
+      if (token[i].contains('(')) {
+        List<String> tmp = token[i].replaceFirst('(', ' ').split(' ');
+        token[i] = tmp.last;
+        token.insert(i, '(');
+        token.insert(i, tmp.first);
+        i += 2;
+      }
+    }
+    for (int i = 0; i < token.length; i++) {
+      if (token[i].contains(')')) {
+        List<String> tmp = token[i].replaceFirst(')', ' ').split(' ');
+        token[i] = tmp.last;
+        token.insert(i, ')');
+        token.insert(i, tmp.first);
+        i += 2;
+      }
+    }
+    for (int i = 0; i < token.length; i++) {
+      if (token[i].contains('[')) {
+        List<String> tmp = token[i].replaceFirst('[', ' ').split(' ');
+        token[i] = tmp.last;
+        token.insert(i, '[');
+        token.insert(i, tmp.first);
+        i += 2;
+      }
+    }
+    for (int i = 0; i < token.length; i++) {
+      if (token[i].contains(']')) {
+        List<String> tmp = token[i].replaceFirst(']', ' ').split(' ');
+        token[i] = tmp.last;
+        token.insert(i, ']');
+        token.insert(i, tmp.first);
+        i += 2;
+      }
+    }
+    for (int i = 0; i < token.length; i++) {
+      if (token[i].contains(',')) {
+        List<String> tmp = token[i].replaceFirst(',', ' ').split(' ');
+        token[i] = tmp.last;
+        token.insert(i, ',');
+        token.insert(i, tmp.first);
+        i += 2;
+      }
+    }
+    token.removeWhere((element) => element == '');
+    token.add('');
+  }
+
+  SyntaxisAnalyzerOutput get errorCommon => SyntaxisAnalyzerOutput(
+        isOk: false,
+        message: 'Индекс ошибки: $i',
+        errorName: 'Неправильная запись выражения',
+      );
+
+  SyntaxisAnalyzerOutput? _term() {
+    bool isNeedNext = true;
+    while (isNeedNext) {
+      isNeedNext = false;
+      if (!_isIdentifierOrConst(nextSymbol)) {
+        return errorCommon;
+      }
+      scan;
+
+      if (nextSymbol == '(') {
+        scan;
+        final rezult = _func();
+        if (rezult != null) {
+          return rezult;
+        }
+      } else if (nextSymbol == '[') {
+        scan;
+        final rezult = _array();
+        if (rezult != null) {
+          return rezult;
+        }
+      }
+
+      if (_isOperator(nextSymbol)) {
+        isNeedNext = true;
+        scan;
+      }
+    }
+    return null;
+  }
+
+  SyntaxisAnalyzerOutput? _func() {
+    bool needIdentificator = true;
+    while (nextSymbol != ')') {
+      if (needIdentificator) {
+        if (!_isIdentifierOrConst(nextSymbol)) {
+          return errorCommon;
+        }
+      } else {
+        if (nextSymbol != ',') {
+          return errorCommon;
+        }
+      }
+      scan;
+      needIdentificator = !needIdentificator;
+    }
+    scan;
+    return null;
+  }
+
+  SyntaxisAnalyzerOutput? _array() {
+    bool needIdentificator = true;
+    while (nextSymbol != ']') {
+      if (needIdentificator) {
+        if (!_isIdentifierOrConst(nextSymbol)) {
+          return errorCommon;
+        }
+      } else {
+        if (nextSymbol != ',') {
+          return errorCommon;
+        }
+      }
+      scan;
+      needIdentificator = !needIdentificator;
+    }
+    scan;
+    return null;
+  }
+
+  SyntaxisAnalyzerOutput? _StartOfTerm() {
+    if (!_isIdentifier(nextSymbol)) {
+      return errorCommon;
+    }
+    scan;
+
+    if (nextSymbol == '=' || nextSymbol == '<-') {
+      scan;
+      return _term();
+    } else if (nextSymbol == '(') {
+      scan;
+      return _func();
+    } else if (nextSymbol == '[') {
+      scan;
+      return _array();
+    } else if (nextSymbol != '\n' && nextSymbol != ':') {
+      return errorCommon;
+    }
+    return null;
+  }
+
+  SyntaxisAnalyzerOutput execute(
+    String input,
+    LexicalAnalyzerOutput lexicalInput,
+    int costilAddVars,
+  ) {
+    token = input.split(' ');
+
+    parseTextToToken();
+
+    identifiers =
+        lexicalInput.identifiers.map((e) => e.value.toString()).toList();
+
+    for (int i = 1; i <= costilAddVars; i++) {
+      identifiers.add('V$i');
+    }
+
     final errorOfStart = SyntaxisAnalyzerOutput(
         isOk: false, message: '', errorName: 'Не подключена библиотека goto');
     final errorLostMark = SyntaxisAnalyzerOutput(
@@ -74,6 +258,7 @@ class SyntaxisAnalyzer {
     if (nextSymbol != 'with_goto') {
       return errorOfStart;
     }
+    scan;
 
     while (i < token.length) {
       while (nextSymbol == '\n') {
@@ -81,13 +266,13 @@ class SyntaxisAnalyzer {
       }
       if (tabLevel) {
         if (nextSymbol.startsWith('\t')) {
+          nextSymbol = nextSymbol.substring(1);
           tabLevel = false;
         } else {
           errorTabLevel.message += i.toString();
           return errorTabLevel;
         }
       }
-
       if (nextSymbol == 'goto') {
         scan;
         if (RegExp(r'\.(\d+)M').hasMatch(nextSymbol)) {
@@ -121,7 +306,10 @@ class SyntaxisAnalyzer {
         if (nextSymbol == 'not') {
           scan;
         }
-        //выражение
+        final extension = _StartOfTerm();
+        if (extension != null) {
+          return extension;
+        }
         if (nextSymbol != ':') {
           errorNotEndIf.message = errorNotEndIf.message + (i).toString();
           return errorNotEndIf;
@@ -140,12 +328,33 @@ class SyntaxisAnalyzer {
           return errorWrongFor;
         }
         scan;
-        if (!RegExp(r'range\((\d+):(\d+)\):').hasMatch(nextSymbol)) {
+        if (!RegExp(r'range').hasMatch(nextSymbol)) {
           errorWrongFor.message += i.toString();
           return errorWrongFor;
         }
         scan;
+        if (nextSymbol != '(') {
+          errorWrongFor.message += i.toString();
+          return errorWrongFor;
+        } else {
+          scan;
+          final rezult = _func();
+          if (rezult != null) {
+            return rezult;
+          }
+        }
+
+        if (nextSymbol != ':') {
+          errorWrongFor.message += i.toString();
+          return errorWrongFor;
+        }
+        scan;
+
         tabLevel = true;
+      } else if (_isIdentifier(nextSymbol)) {
+        _StartOfTerm();
+      } else {
+        return errorCommon;
       }
     }
 
