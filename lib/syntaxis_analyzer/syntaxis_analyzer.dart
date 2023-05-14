@@ -125,15 +125,15 @@ class SyntaxisAnalyzer {
 
       if (nextSymbol == '(') {
         scan;
-        final rezult = _func();
-        if (rezult != null) {
-          return rezult;
+        final result = _func();
+        if (result != null) {
+          return result;
         }
       } else if (nextSymbol == '[') {
         scan;
-        final rezult = _array();
-        if (rezult != null) {
-          return rezult;
+        final result = _array();
+        if (result != null) {
+          return result;
         }
       }
 
@@ -298,9 +298,9 @@ class SyntaxisAnalyzer {
       return AnalyzerErrorsHolder.errorWrongFor;
     } else {
       scan;
-      final rezult = _func();
-      if (rezult != null) {
-        return rezult;
+      final result = _func();
+      if (result != null) {
+        return result;
       }
     }
 
@@ -314,47 +314,40 @@ class SyntaxisAnalyzer {
   }
 
   SyntaxisAnalyzerOutput? _extension() {
-    final start = _startOfProg();
-    if (start != null) {
-      return start;
+    while (nextSymbol == '\n') {
+      AnalyzerErrorsHolder.lineCount++;
+      AnalyzerErrorsHolder.tokenCount = 0;
+      scan;
+    }
+    if (tabLevel) {
+      if (nextSymbol.startsWith('\t')) {
+        nextSymbol = nextSymbol.substring(1);
+        tabLevel = false;
+      } else {
+        return AnalyzerErrorsHolder.errorTabLevel;
+      }
+    }
+    SyntaxisAnalyzerOutput? result;
+    if (nextSymbol == 'goto') {
+      result = _goto();
+    } else if (nextSymbol == 'label') {
+      result = _label();
+    } else if (nextSymbol == 'if') {
+      result = _if();
+    } else if (nextSymbol == 'for') {
+      result = _for();
+    } else if (_isIdentifier(nextSymbol)) {
+      result = _startOfTerm();
+    } else {
+      result = AnalyzerErrorsHolder.errorCommon;
     }
 
-    while (i < token.length) {
-      while (nextSymbol == '\n') {
-        AnalyzerErrorsHolder.lineCount++;
-        AnalyzerErrorsHolder.tokenCount = 0;
-        scan;
-      }
-      if (tabLevel) {
-        if (nextSymbol.startsWith('\t')) {
-          nextSymbol = nextSymbol.substring(1);
-          tabLevel = false;
-        } else {
-          return AnalyzerErrorsHolder.errorTabLevel;
-        }
-      }
-      SyntaxisAnalyzerOutput? rezult;
-      if (nextSymbol == 'goto') {
-        rezult = _goto();
-      } else if (nextSymbol == 'label') {
-        rezult = _label();
-      } else if (nextSymbol == 'if') {
-        rezult = _if();
-      } else if (nextSymbol == 'for') {
-        rezult = _for();
-      } else if (_isIdentifier(nextSymbol)) {
-        rezult = _startOfTerm();
-      } else {
-        rezult = AnalyzerErrorsHolder.errorCommon;
-      }
+    if (result != null) {
+      return result;
+    }
 
-      if (rezult != null) {
-        return rezult;
-      }
-
-      for (int i = 0; i < needToDeclare.length; i++) {
-        isVarDeclared[i] = needToDeclare[i];
-      }
+    for (int i = 0; i < needToDeclare.length; i++) {
+      isVarDeclared[i] = needToDeclare[i];
     }
     return null;
   }
@@ -391,9 +384,16 @@ class SyntaxisAnalyzer {
       needToDeclare.add(false);
     }
 
-    final rezult = _extension();
-    if (rezult != null) {
-      return rezult;
+    final start = _startOfProg();
+    if (start != null) {
+      return start;
+    }
+
+    while (i < token.length) {
+      final result = _extension();
+      if (result != null) {
+        return result;
+      }
     }
 
     if (labelMarks.length != gotoMarks.length ||
